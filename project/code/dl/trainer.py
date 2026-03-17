@@ -5,6 +5,7 @@ import pandas as pd
 import random
 import matplotlib.pyplot as plt
 import seaborn as sns
+import time
 
 # 재현 가능한 결과를 보장하는 시드 고정 함수를 생성합니다.
 def set_seed(seed: int = 0, deterministic: bool = False):
@@ -122,6 +123,8 @@ class Trainer:
             True이면 기존 학습 이력을 초기화하고,
             False이면 기존 이력 뒤에 이어서 누적합니다.
         '''
+        start_time = time.perf_counter()
+        
         if reset_history:
             self.train_losses = []
             self.train_accs = []
@@ -160,6 +163,14 @@ class Trainer:
             'train_accs': self.train_accs,
             'test_accs': self.test_accs,
         }
+
+        end_time = time.perf_counter()
+        elapsed = end_time - start_time
+        
+        minutes = int(elapsed // 60)
+        seconds = int(elapsed % 60)
+
+        print(f'Total training time: {minutes} min {seconds} sec')
         
         return history
 
@@ -424,7 +435,7 @@ class Trainer:
             pred_label = class_names[int(p)] if class_names is not None else int(p)
             
             ax.set_title(label = f'index: {idx}\ntrue: {true_label} | pred: {pred_label}', 
-                        fontsize = 8)
+                         fontsize = 8)
             ax.axis('off')
 
         # 남는 축이 있으면 숨깁니다.
