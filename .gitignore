@@ -9,3 +9,6 @@ project/data/CIFAR10_Dataset.pkl
 project/data/cifar-10-python.tar.gz
 project/data/*.pkl
 project/data/*.tar.gz
+
+# Kaggle 대용량 데이터
+kaggle_data_3/data/
