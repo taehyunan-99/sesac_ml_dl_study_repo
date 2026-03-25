@@ -12,3 +12,4 @@ project/data/*.tar.gz
 
 # Kaggle 대용량 데이터
 kaggle_data_3/data/
+.claude/worktrees/
