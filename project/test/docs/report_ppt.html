@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>서울 아파트 실거래가 분석</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ── Scale Factor: 이 값 하나로 전체 크기 조절 ── */
+  --s: 1.4;
+
+  --navy-900: #0a0f1e;
+  --navy-800: #111831;
+  --navy-700: #1a2342;
+  --navy-600: #243054;
+  --navy-500: #2d3d6b;
+  --gold-400: #c9a84c;
+  --gold-300: #dfc06e;
+  --gold-200: #ebd48f;
+  --cream: #f5f0e8;
+  --cream-dark: #e8e0d0;
+  --slate: #94a3b8;
+  --white: #ffffff;
+  --red-soft: #e74c3c;
+  --green-soft: #2ecc71;
+  --blue-soft: #5dade2;
+  --font-display: 'Playfair Display', 'Noto Sans KR', serif;
+  --font-body: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--navy-900);
+  color: var(--cream);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Slide Container ── */
+.slide {
+  width: 100vw;
+  height: 100vh;
+  scroll-snap-align: start;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ── Grid Overlay (blueprint motif) ── */
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.slide-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1600px;
+  width: 96%;
+  margin: 0 auto;
+  padding: calc(16px * var(--s)) 0;
+}
+
+/* ── Slide Number ── */
+.slide-num {
+  position: absolute;
+  top: calc(32px * var(--s));
+  right: calc(48px * var(--s));
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--s));
+  color: var(--gold-400);
+  letter-spacing: 2px;
+  opacity: 0.6;
+  z-index: 2;
+}
+
+/* ── Typography ── */
+.section-label {
+  font-family: var(--font-mono);
+  font-size: calc(15px * var(--s));
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  color: var(--gold-400);
+  margin-bottom: calc(16px * var(--s));
+  display: flex;
+  align-items: center;
+  gap: calc(12px * var(--s));
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold-400), transparent);
+  opacity: 0.3;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-size: clamp(calc(42px * var(--s)), 5vw, calc(72px * var(--s)));
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--white);
+  margin-bottom: calc(20px * var(--s));
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-size: clamp(calc(38px * var(--s)), 4.5vw, calc(58px * var(--s)));
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: calc(18px * var(--s));
+  line-height: 1.2;
+}
+
+h3 {
+  font-size: calc(24px * var(--s));
+  font-weight: 700;
+  color: var(--gold-300);
+  margin-bottom: calc(14px * var(--s));
+}
+
+p {
+  font-size: calc(21px * var(--s));
+  line-height: 1.7;
+  color: var(--cream-dark);
+  font-weight: 300;
+}
+
+/* ── Cover Slide ── */
+#cover {
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(201,168,76,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(45,61,107,0.4) 0%, transparent 50%),
+    var(--navy-900);
+}
+
+#cover {
+  justify-content: center !important;
+  padding-top: 0 !important;
+}
+#cover .slide-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100vh;
+  padding: 0 5%;
+}
+
+.cover-accent-line {
+  width: calc(80px * var(--s));
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold-400), var(--gold-200));
+  margin-bottom: calc(32px * var(--s));
+}
+
+#cover h1 {
+  font-size: clamp(calc(48px * var(--s)), 6vw, calc(84px * var(--s)));
+  color: #f5f0e8;
+  margin-bottom: calc(12px * var(--s));
+}
+
+.cover-subtitle {
+  font-family: var(--font-display);
+  font-size: clamp(calc(18px * var(--s)), 2vw, calc(26px * var(--s)));
+  font-weight: 400;
+  font-style: italic;
+  color: var(--gold-300);
+  margin-bottom: calc(48px * var(--s));
+}
+
+.cover-meta {
+  display: flex;
+  gap: calc(32px * var(--s));
+  font-family: var(--font-mono);
+  font-size: calc(16px * var(--s));
+  letter-spacing: 1px;
+  color: var(--slate);
+}
+
+.cover-meta span {
+  display: flex;
+  align-items: center;
+  gap: calc(8px * var(--s));
+}
+
+.cover-meta span::before {
+  content: '';
+  width: calc(4px * var(--s));
+  height: calc(4px * var(--s));
+  background: var(--gold-400);
+  border-radius: 50%;
+}
+
+/* City silhouette decoration */
+.city-silhouette {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: calc(180px * var(--s));
+  opacity: 0.06;
+  z-index: 0;
+}
+
+/* ── Problem Slide ── */
+#problem { background: var(--navy-900); }
+
+.problem-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: calc(28px * var(--s));
+  margin-top: calc(16px * var(--s));
+}
+
+.problem-card {
+  background: rgba(26,35,66,0.6);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: calc(12px * var(--s));
+  padding: calc(28px * var(--s)) calc(32px * var(--s));
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s, border-color 0.3s;
+}
+
+.problem-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(201,168,76,0.3);
+}
+
+.problem-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(4px * var(--s));
+  height: 100%;
+}
+
+.problem-card:nth-child(1)::before { background: var(--gold-400); }
+.problem-card:nth-child(2)::before { background: var(--blue-soft); }
+.problem-card:nth-child(3)::before { background: var(--green-soft); }
+
+.problem-card .card-icon {
+  font-size: calc(32px * var(--s));
+  margin-bottom: calc(10px * var(--s));
+}
+
+.problem-card h3 {
+  font-size: calc(20px * var(--s));
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: calc(12px * var(--s));
+}
+
+.problem-card p {
+  font-size: calc(20px * var(--s));
+  line-height: 1.7;
+}
+
+/* ── Data Overview ── */
+#data-overview { background: var(--navy-900); }
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: calc(20px * var(--s));
+  margin-top: calc(20px * var(--s));
+}
+
+.data-metric {
+  background: rgba(26,35,66,0.5);
+  border: 1px solid rgba(201,168,76,0.08);
+  border-radius: calc(10px * var(--s));
+  padding: calc(24px * var(--s));
+  text-align: center;
+  transition: border-color 0.3s;
+}
+
+.data-metric:hover {
+  border-color: rgba(201,168,76,0.25);
+}
+
+.metric-value {
+  font-family: var(--font-display);
+  font-size: calc(50px * var(--s));
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: calc(6px * var(--s));
+}
+
+.metric-value .unit {
+  font-size: calc(26px * var(--s));
+  color: var(--gold-300);
+  font-weight: 400;
+}
+
+.metric-label {
+  font-size: calc(18px * var(--s));
+  color: var(--slate);
+  letter-spacing: 1px;
+}
+
+.metric-sub {
+  font-family: var(--font-mono);
+  font-size: calc(15px * var(--s));
+  color: var(--gold-400);
+  margin-top: calc(8px * var(--s));
+  opacity: 0.7;
+}
+
+.data-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(16px * var(--s));
+  margin-top: calc(32px * var(--s));
+  padding: calc(20px * var(--s));
+  background: rgba(26,35,66,0.4);
+  border-radius: calc(10px * var(--s));
+  border: 1px solid rgba(201,168,76,0.06);
+}
+
+.flow-box {
+  padding: calc(18px * var(--s)) calc(32px * var(--s));
+  border-radius: calc(8px * var(--s));
+  text-align: center;
+  font-size: calc(18px * var(--s));
+  font-weight: 500;
+}
+
+.flow-before {
+  background: rgba(231,76,60,0.15);
+  border: 1px solid rgba(231,76,60,0.3);
+  color: #f1948a;
+}
+
+.flow-arrow {
+  color: var(--gold-400);
+  font-size: calc(20px * var(--s));
+}
+
+.flow-after {
+  background: rgba(46,204,113,0.15);
+  border: 1px solid rgba(46,204,113,0.3);
+  color: #82e0aa;
+}
+
+.flow-delta {
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--s));
+  color: var(--slate);
+  padding: calc(8px * var(--s)) calc(16px * var(--s));
+}
+
+/* ── Quality & Preprocessing ── */
+#quality { background: var(--navy-900); }
+
+.quality-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(24px * var(--s));
+  margin-top: calc(16px * var(--s));
+}
+
+.quality-section {
+  background: rgba(26,35,66,0.5);
+  border: 1px solid rgba(201,168,76,0.08);
+  border-radius: calc(10px * var(--s));
+  padding: calc(24px * var(--s));
+}
+
+.quality-section h3 {
+  display: flex;
+  align-items: center;
+  gap: calc(8px * var(--s));
+  margin-bottom: calc(16px * var(--s));
+  font-size: calc(16px * var(--s));
+}
+
+.quality-item {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(12px * var(--s));
+  margin-bottom: calc(16px * var(--s));
+  font-size: calc(18px * var(--s));
+  line-height: 1.65;
+  color: var(--cream-dark);
+}
+
+.quality-item .icon {
+  flex-shrink: 0;
+  width: calc(20px * var(--s));
+  text-align: center;
+}
+
+.before-after-table {
+  width: 100%;
+  margin-top: calc(20px * var(--s));
+  border-collapse: collapse;
+}
+
+.before-after-table th {
+  font-family: var(--font-mono);
+  font-size: calc(15px * var(--s));
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--gold-400);
+  padding: calc(14px * var(--s)) calc(18px * var(--s));
+  text-align: left;
+  border-bottom: 1px solid rgba(201,168,76,0.2);
+}
+
+.before-after-table td {
+  padding: calc(14px * var(--s)) calc(18px * var(--s));
+  font-size: calc(18px * var(--s));
+  color: var(--cream-dark);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.before-after-table tr:hover td {
+  background: rgba(201,168,76,0.03);
+}
+
+.val-change {
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--s));
+  color: var(--green-soft);
+}
+
+/* ── Stat Results ── */
+#stat-results { background: var(--navy-900); }
+
+.stat-table-wrap {
+  margin-top: calc(16px * var(--s));
+  overflow-x: auto;
+  border-radius: calc(10px * var(--s));
+  border: 1px solid rgba(201,168,76,0.1);
+}
+
+.stat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: calc(17px * var(--s));
+}
+
+.stat-table thead th {
+  background: var(--navy-700);
+  padding: calc(16px * var(--s)) calc(16px * var(--s));
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: calc(15px * var(--s));
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--gold-300);
+  border-bottom: 2px solid var(--gold-400);
+  white-space: nowrap;
+}
+
+.stat-table tbody td {
+  padding: calc(15px * var(--s)) calc(16px * var(--s));
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--cream-dark);
+  vertical-align: middle;
+}
+
+.stat-table tbody tr:hover td {
+  background: rgba(201,168,76,0.04);
+}
+
+.stat-table tbody tr:nth-child(even) td {
+  background: rgba(26,35,66,0.3);
+}
+
+.stat-table tbody tr:nth-child(even):hover td {
+  background: rgba(201,168,76,0.06);
+}
+
+.effect-badge {
+  display: inline-block;
+  padding: calc(5px * var(--s)) calc(14px * var(--s));
+  border-radius: calc(20px * var(--s));
+  font-size: calc(15px * var(--s));
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.effect-large {
+  background: rgba(201,168,76,0.2);
+  color: var(--gold-300);
+  border: 1px solid rgba(201,168,76,0.3);
+}
+
+.effect-medium {
+  background: rgba(93,173,226,0.15);
+  color: var(--blue-soft);
+  border: 1px solid rgba(93,173,226,0.25);
+}
+
+.effect-small {
+  background: rgba(148,163,184,0.15);
+  color: var(--slate);
+  border: 1px solid rgba(148,163,184,0.2);
+}
+
+.effect-excess {
+  background: rgba(231,76,60,0.12);
+  color: #f1948a;
+  border: 1px solid rgba(231,76,60,0.2);
+}
+
+.p-val {
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--s));
+}
+
+.stat-note {
+  margin-top: calc(18px * var(--s));
+  padding: calc(18px * var(--s)) calc(24px * var(--s));
+  background: rgba(231,76,60,0.08);
+  border-left: 3px solid var(--red-soft);
+  border-radius: 0 calc(8px * var(--s)) calc(8px * var(--s)) 0;
+  font-size: calc(17px * var(--s));
+  color: #f1948a;
+  line-height: 1.6;
+}
+
+/* ── Key Findings ── */
+#key-findings { background: var(--navy-900); }
+
+.findings-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(24px * var(--s));
+  margin-top: calc(16px * var(--s));
+}
+
+.finding-card {
+  background: rgba(26,35,66,0.6);
+  border-radius: calc(14px * var(--s));
+  padding: calc(28px * var(--s));
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(201,168,76,0.1);
+}
+
+.finding-card:first-child {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: calc(28px * var(--s));
+  align-items: center;
+}
+
+.finding-rank {
+  font-family: var(--font-display);
+  font-size: calc(64px * var(--s));
+  font-weight: 700;
+  line-height: 1;
+}
+
+.finding-card:nth-child(1) .finding-rank { color: var(--gold-400); }
+.finding-card:nth-child(2) .finding-rank { color: var(--blue-soft); }
+.finding-card:nth-child(3) .finding-rank { color: var(--green-soft); }
+
+.finding-name {
+  font-size: calc(28px * var(--s));
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: calc(8px * var(--s));
+}
+
+.finding-effect {
+  font-family: var(--font-mono);
+  font-size: calc(19px * var(--s));
+  margin-bottom: calc(12px * var(--s));
+}
+
+.finding-card:nth-child(1) .finding-effect { color: var(--gold-300); }
+.finding-card:nth-child(2) .finding-effect { color: var(--blue-soft); }
+.finding-card:nth-child(3) .finding-effect { color: var(--green-soft); }
+
+.finding-desc {
+  font-size: calc(18px * var(--s));
+  line-height: 1.7;
+  color: var(--cream-dark);
+}
+
+/* ── Effect Bar (in finding card) ── */
+.effect-bar-container {
+  margin-top: calc(14px * var(--s));
+}
+
+.effect-bar-bg {
+  width: 100%;
+  height: calc(8px * var(--s));
+  background: rgba(255,255,255,0.06);
+  border-radius: calc(4px * var(--s));
+  overflow: hidden;
+}
+
+.effect-bar-fill {
+  height: 100%;
+  border-radius: calc(4px * var(--s));
+  transition: width 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ── Visualizations ── */
+#visualizations { background: var(--navy-900); }
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(28px * var(--s));
+  margin-top: calc(16px * var(--s));
+}
+
+.viz-panel {
+  background: rgba(26,35,66,0.5);
+  border: 1px solid rgba(201,168,76,0.08);
+  border-radius: calc(12px * var(--s));
+  padding: calc(24px * var(--s));
+}
+
+.viz-panel h3 {
+  font-size: calc(22px * var(--s));
+  margin-bottom: calc(22px * var(--s));
+}
+
+/* Horizontal bar chart */
+.h-bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: calc(10px * var(--s));
+}
+
+.h-bar-row {
+  display: grid;
+  grid-template-columns: calc(130px * var(--s)) 1fr calc(50px * var(--s));
+  align-items: center;
+  gap: calc(12px * var(--s));
+}
+
+.h-bar-label {
+  font-size: calc(16px * var(--s));
+  color: var(--cream-dark);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.h-bar-track {
+  height: calc(26px * var(--s));
+  background: rgba(255,255,255,0.04);
+  border-radius: calc(4px * var(--s));
+  overflow: hidden;
+  position: relative;
+}
+
+.h-bar-fill {
+  height: 100%;
+  border-radius: calc(4px * var(--s));
+  position: relative;
+  min-width: 2px;
+}
+
+.h-bar-value {
+  font-family: var(--font-mono);
+  font-size: calc(16px * var(--s));
+  color: var(--slate);
+}
+
+/* District ranking */
+.district-chart {
+  display: flex;
+  flex-direction: column;
+  gap: calc(6px * var(--s));
+}
+
+.district-row {
+  display: grid;
+  grid-template-columns: calc(70px * var(--s)) 1fr calc(60px * var(--s));
+  align-items: center;
+  gap: calc(10px * var(--s));
+}
+
+.district-name {
+  font-size: calc(17px * var(--s));
+  color: var(--cream-dark);
+  text-align: right;
+}
+
+.district-bar-track {
+  height: calc(24px * var(--s));
+  background: rgba(255,255,255,0.03);
+  border-radius: calc(3px * var(--s));
+  overflow: hidden;
+}
+
+.district-bar-fill {
+  height: 100%;
+  border-radius: calc(3px * var(--s));
+}
+
+.district-value {
+  font-family: var(--font-mono);
+  font-size: calc(16px * var(--s));
+  color: var(--slate);
+}
+
+.district-divider {
+  text-align: center;
+  padding: calc(8px * var(--s)) 0;
+  font-size: calc(13px * var(--s));
+  color: var(--slate);
+  letter-spacing: 3px;
+  position: relative;
+}
+
+.district-divider::before,
+.district-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 30%;
+  height: 1px;
+  background: rgba(148,163,184,0.2);
+}
+
+.district-divider::before { left: 5%; }
+.district-divider::after { right: 5%; }
+
+/* ── Conclusion ── */
+#conclusion {
+  background:
+    radial-gradient(ellipse at 80% 80%, rgba(201,168,76,0.06) 0%, transparent 50%),
+    var(--navy-900);
+}
+
+.conclusion-answer {
+  background: linear-gradient(135deg, rgba(201,168,76,0.12), rgba(201,168,76,0.04));
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: calc(14px * var(--s));
+  padding: calc(32px * var(--s));
+  margin-bottom: calc(28px * var(--s));
+  position: relative;
+}
+
+.conclusion-answer::before {
+  content: '"';
+  font-family: var(--font-display);
+  font-size: calc(80px * var(--s));
+  color: var(--gold-400);
+  opacity: 0.2;
+  position: absolute;
+  top: calc(-10px * var(--s));
+  left: calc(20px * var(--s));
+  line-height: 1;
+}
+
+.conclusion-answer p {
+  font-size: calc(26px * var(--s));
+  font-weight: 500;
+  color: var(--white);
+  line-height: 1.55;
+  padding-left: calc(8px * var(--s));
+}
+
+.conclusion-answer .highlight {
+  color: var(--gold-300);
+  font-weight: 700;
+}
+
+.conclusion-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(24px * var(--s));
+}
+
+.conclusion-section {
+  padding: calc(20px * var(--s));
+  background: rgba(26,35,66,0.4);
+  border-radius: calc(10px * var(--s));
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+.conclusion-section h3 {
+  font-size: calc(20px * var(--s));
+  margin-bottom: calc(16px * var(--s));
+}
+
+.conclusion-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.conclusion-section li {
+  font-size: calc(18px * var(--s));
+  line-height: 1.7;
+  color: var(--cream-dark);
+  padding-left: calc(20px * var(--s));
+  position: relative;
+  margin-bottom: calc(10px * var(--s));
+}
+
+.conclusion-section li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--gold-400);
+  font-size: calc(17px * var(--s));
+}
+
+/* ── Save Toolbar ── */
+.save-toolbar {
+  position: fixed;
+  top: 24px;
+  right: 120px;
+  display: flex;
+  gap: 10px;
+  z-index: 200;
+}
+
+.save-btn {
+  padding: 8px 18px;
+  border-radius: 6px;
+  border: 1px solid rgba(201,168,76,0.3);
+  background: rgba(10,15,30,0.85);
+  color: var(--gold-300);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.25s;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.save-btn:hover {
+  background: rgba(201,168,76,0.15);
+  border-color: var(--gold-400);
+  color: var(--white);
+}
+
+@media print {
+  .save-toolbar { display: none; }
+}
+
+/* ── Navigation ── */
+.nav-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 16px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+  background: linear-gradient(transparent, rgba(10,15,30,0.9));
+  pointer-events: none;
+}
+
+.nav-dots {
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.nav-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(201,168,76,0.2);
+  border: 1px solid rgba(201,168,76,0.3);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.nav-dot.active {
+  background: var(--gold-400);
+  box-shadow: 0 0 8px rgba(201,168,76,0.4);
+  transform: scale(1.2);
+}
+
+.nav-hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--slate);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+
+/* ── Print Styles ── */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  @page {
+    size: 1600px 900px landscape;
+    margin: 0;
+  }
+  html {
+    scroll-snap-type: none !important;
+  }
+  body {
+    background: #0a0f1e !important;
+    margin: 0;
+    padding: 0;
+  }
+  .slide {
+    width: 1600px !important;
+    height: 900px !important;
+    page-break-after: always;
+    page-break-inside: avoid;
+    break-after: page;
+    break-inside: avoid;
+    overflow: hidden;
+    background: #0a0f1e !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: 36px !important;
+  }
+  .slide:last-child {
+    page-break-after: auto;
+  }
+  #cover {
+    background: radial-gradient(ellipse at 20% 80%, rgba(201,168,76,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(45,61,107,0.4) 0%, transparent 50%),
+                #0a0f1e !important;
+  }
+  #conclusion {
+    background: radial-gradient(ellipse at 80% 80%, rgba(201,168,76,0.06) 0%, transparent 50%),
+                #0a0f1e !important;
+  }
+  .slide-inner {
+    max-width: 1400px !important;
+    width: 94% !important;
+    overflow: hidden;
+  }
+  .nav-bar { display: none !important; }
+  .save-toolbar { display: none !important; }
+  .slide::before { display: none; }
+  .city-silhouette { display: none; }
+  .slide-num { position: absolute; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .data-grid { grid-template-columns: repeat(2, 1fr); }
+  .quality-grid { grid-template-columns: 1fr; }
+  .findings-container { grid-template-columns: 1fr; }
+  .finding-card:first-child { grid-column: 1; grid-template-columns: auto 1fr; }
+  .viz-grid { grid-template-columns: 1fr; }
+  .conclusion-grid { grid-template-columns: 1fr; }
+  .cover-meta { flex-direction: column; gap: 12px; }
+  .data-flow { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ SLIDE 1: COVER ═══════════════════════════════════════ -->
+<section class="slide" id="cover" data-index="0">
+  <span class="slide-num">01 / 08</span>
+  <div class="slide-inner">
+    <div class="cover-accent-line"></div>
+    <div class="section-label">Data Analysis Project</div>
+    <h1>서울 아파트<br>실거래가 분석</h1>
+    <div class="cover-subtitle">거래금액 결정 요인 통계 분석</div>
+    <div class="cover-meta">
+      <span>국토교통부 실거래가 공개시스템</span>
+      <span>2020 — 2024</span>
+      <span>2026.03.28</span>
+    </div>
+  </div>
+  <svg class="city-silhouette" viewBox="0 0 1440 180" preserveAspectRatio="none">
+    <path d="M0,180 L0,120 L40,120 L40,80 L60,80 L60,100 L80,100 L80,60 L100,60 L100,90 L120,90 L120,40 L140,40 L140,70 L160,70 L160,50 L180,50 L180,100 L200,100 L200,30 L220,30 L220,70 L240,70 L240,90 L280,90 L280,20 L300,20 L300,50 L320,50 L320,80 L340,80 L340,45 L360,45 L360,75 L380,75 L380,55 L400,55 L400,95 L420,95 L420,35 L440,35 L440,65 L480,65 L480,25 L500,25 L500,55 L520,55 L520,85 L540,85 L540,40 L560,40 L560,70 L580,70 L580,50 L600,50 L600,110 L640,110 L640,45 L660,45 L660,75 L680,75 L680,30 L700,30 L700,60 L720,60 L720,85 L740,85 L740,55 L760,55 L760,95 L800,95 L800,40 L820,40 L820,70 L840,70 L840,50 L860,50 L860,80 L880,80 L880,35 L900,35 L900,65 L940,65 L940,25 L960,25 L960,55 L980,55 L980,90 L1000,90 L1000,45 L1020,45 L1020,75 L1040,75 L1040,55 L1060,55 L1060,100 L1100,100 L1100,35 L1120,35 L1120,65 L1140,65 L1140,50 L1160,50 L1160,85 L1180,85 L1180,40 L1200,40 L1200,70 L1220,70 L1220,95 L1260,95 L1260,30 L1280,30 L1280,60 L1300,60 L1300,80 L1320,80 L1320,50 L1340,50 L1340,100 L1380,100 L1380,55 L1400,55 L1400,75 L1440,75 L1440,180 Z" fill="currentColor" fill-opacity="0.8"/>
+  </svg>
+</section>
+
+<!-- ═══════════════════════════════════════ SLIDE 2: PROBLEM ═══════════════════════════════════════ -->
+<section class="slide" id="problem" data-index="1">
+  <span class="slide-num">02 / 08</span>
+  <div class="slide-inner">
+    <div class="section-label">Problem Definition</div>
+    <h2>문제 정의</h2>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="card-icon">🏙️</div>
+        <h3 style="color: var(--gold-300);">배경</h3>
+        <p>서울 부동산 시장의 가격 변동성이 커지면서, 아파트 거래금액에 영향을 미치는 요인을 데이터 기반으로 이해할 필요성이 높아졌습니다.<br>체감과 실제 데이터 사이의 괴리를 통계적으로 검증합니다.</p>
+      </div>
+      <div class="problem-card">
+        <div class="card-icon">🎯</div>
+        <h3 style="color: var(--blue-soft);">분석 목적</h3>
+        <p>서울 아파트 실거래 데이터(2020~2024, 22만 건)를 분석하여 거래금액에 영향을 미치는 <strong style="color:var(--white)">핵심 요인</strong>을 통계적으로 파악하고,<br>각 요인의 <strong style="color:var(--white)">실질적 영향력</strong>을 정량화합니다.</p>
+      </div>
+      <div class="problem-card">
+        <div class="card-icon">❓</div>
+        <h3 style="color: var(--green-soft);">핵심 질문</h3>
+        <p>어떤 요인—<strong style="color:var(--white)">지역(시군구), 면적(전용면적), 단지 규모(세대수), 건물 노후도(경과년수)</strong>—이 서울 아파트 거래금액에 얼마나 영향을 미치는가?</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ SLIDE 3: DATA OVERVIEW ═══════════════════════════════════════ -->
+<section class="slide" id="data-overview" data-index="2">
+  <span class="slide-num">03 / 08</span>
+  <div class="slide-inner">
+    <div class="section-label">Data Overview</div>
+    <h2>데이터 소개</h2>
+    <div class="data-grid">
+      <div class="data-metric">
+        <div class="metric-value">215,144<span class="unit">행</span></div>
+        <div class="metric-label">분석 데이터 규모</div>
+        <div class="metric-sub">원본 220,890행에서 전처리</div>
+      </div>
+      <div class="data-metric">
+        <div class="metric-value">14<span class="unit">열</span></div>
+        <div class="metric-label">분석 변수</div>
+        <div class="metric-sub">수치형 10 · 범주형 4</div>
+      </div>
+      <div class="data-metric">
+        <div class="metric-value">5<span class="unit">년</span></div>
+        <div class="metric-label">수집 기간</div>
+        <div class="metric-sub">2020.01 — 2024.12</div>
+      </div>
+      <div class="data-metric">
+        <div class="metric-value">25<span class="unit">개구</span></div>
+        <div class="metric-label">서울 자치구</div>
+        <div class="metric-sub">노원구 8.7% · 송파구 6.4%</div>
+      </div>
+      <div class="data-metric">
+        <div class="metric-value">10.1<span class="unit">억 원</span></div>
+        <div class="metric-label">평균 거래금액</div>
+        <div class="metric-sub">중위수 8.3억 (우편향)</div>
+      </div>
+      <div class="data-metric">
+        <div class="metric-value">8<span class="unit">개</span></div>
+        <div class="metric-label">가설 검정</div>
+        <div class="metric-sub">α = 0.05 유의수준</div>
+      </div>
+    </div>
+    <div class="data-flow">
+      <div class="flow-box flow-before">원본<br><strong>220,890행 × 17열</strong></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-delta">중복 제거 -5,746행<br>컬럼 제거 -3열</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box flow-after">분석용<br><strong>215,144행 × 14열</strong></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ SLIDE 4: QUALITY ═══════════════════════════════════════ -->
+<section class="slide" id="quality" data-index="3">
+  <span class="slide-num">04 / 08</span>
+  <div class="slide-inner">
+    <div class="section-label">Data Quality & Preprocessing</div>
+    <h2>데이터 품질 & 전처리</h2>
+    <div class="quality-grid">
+      <div class="quality-section">
+        <h3>✅ 데이터 품질</h3>
+        <div class="quality-item">
+          <span class="icon" style="color:var(--green-soft)">●</span>
+          <span><strong style="color:var(--white)">결측값 0건</strong> — 17개 컬럼 모두 완전</span>
+        </div>
+        <div class="quality-item">
+          <span class="icon" style="color:var(--gold-400)">●</span>
+          <span><strong style="color:var(--white)">층 min = -3</strong> — 반지하/지하층 (도메인상 정상, 52건 유지)</span>
+        </div>
+        <div class="quality-item">
+          <span class="icon" style="color:var(--gold-400)">●</span>
+          <span><strong style="color:var(--white)">경과년수 min = -2</strong> — 입주 전 분양권 전매 (29건, 0으로 클리핑)</span>
+        </div>
+        <div class="quality-item">
+          <span class="icon" style="color:var(--gold-400)">●</span>
+          <span><strong style="color:var(--white)">거래금액 우편향</strong> — 평균 10.1억 > 중위수 8.3억 (고가 아파트)</span>
+        </div>
+      </div>
+      <div class="quality-section">
+        <h3>🔧 전처리 내역</h3>
+        <div class="quality-item">
+          <span class="icon">✕</span>
+          <span><strong style="color:var(--white)">시도명</strong> 제거 — 단일값 (서울특별시 100%)</span>
+        </div>
+        <div class="quality-item">
+          <span class="icon">✕</span>
+          <span><strong style="color:var(--white)">입주년도</strong> 제거 — 경과년수와 r = -0.99</span>
+        </div>
+        <div class="quality-item">
+          <span class="icon">✕</span>
+          <span><strong style="color:var(--white)">주차대수</strong> 제거 — 세대수와 r = 0.95</span>
+        </div>
+        <div class="quality-item">
+          <span class="icon">✕</span>
+          <span><strong style="color:var(--white)">중복 5,746행</strong> 제거 (-2.6%)</span>
+        </div>
+        <div class="quality-item">
+          <span class="icon">↻</span>
+          <span><strong style="color:var(--white)">계약일자</strong> → datetime64 변환</span>
+        </div>
+      </div>
+    </div>
+    <table class="before-after-table" style="margin-top:24px">
+      <thead>
+        <tr><th>항목</th><th>전처리 전</th><th>전처리 후</th><th>변화</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>행 수</td><td>220,890</td><td>215,144</td><td><span class="val-change">−5,746 (−2.6%)</span></td></tr>
+        <tr><td>열 수</td><td>17</td><td>14</td><td><span class="val-change">−3</span></td></tr>
+        <tr><td>다중공선성</td><td>r &gt; 0.9 쌍 2개</td><td>해소</td><td><span class="val-change">2개 컬럼 제거</span></td></tr>
+        <tr><td>중복</td><td>5,746건</td><td>0건</td><td><span class="val-change">제거 완료</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ SLIDE 5: STAT RESULTS ═══════════════════════════════════════ -->
+<section class="slide" id="stat-results" data-index="4">
+  <span class="slide-num">05 / 08</span>
+  <div class="slide-inner">
+    <div class="section-label">Statistical Analysis</div>
+    <h2>통계 검정 결과</h2>
+    <div class="stat-table-wrap">
+      <table class="stat-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>분석</th>
+            <th>검정</th>
+            <th>통계량</th>
+            <th>p값</th>
+            <th>효과 크기</th>
+            <th>해석</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong style="color:var(--white)">시군구별 거래금액</strong></td>
+            <td>Kruskal-Wallis</td>
+            <td style="font-family:var(--font-mono)">85,790.08</td>
+            <td class="p-val">&lt;0.0001</td>
+            <td style="font-family:var(--font-mono)">η²=0.3931</td>
+            <td><span class="effect-badge effect-large">★★★ 매우 큰 효과</span></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>재건축별 거래금액</td>
+            <td>Mann-Whitney U</td>
+            <td style="font-family:var(--font-mono)">3.25×10⁹</td>
+            <td class="p-val">0.0003</td>
+            <td style="font-family:var(--font-mono)">d=0.1443</td>
+            <td><span class="effect-badge effect-excess">검정력 과잉</span></td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong style="color:var(--white)">전용면적 ↔ 거래금액</strong></td>
+            <td>Spearman</td>
+            <td style="font-family:var(--font-mono)">ρ=0.6098</td>
+            <td class="p-val">&lt;0.0001</td>
+            <td style="font-family:var(--font-mono)">r²=0.3718</td>
+            <td><span class="effect-badge effect-large">★★★ 강한 상관</span></td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>계약년도별 거래금액</td>
+            <td>Kruskal-Wallis</td>
+            <td style="font-family:var(--font-mono)">9,083.75</td>
+            <td class="p-val">&lt;0.0001</td>
+            <td style="font-family:var(--font-mono)">η²=0.0332</td>
+            <td><span class="effect-badge effect-small">★ 작은 효과</span></td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>계약월별 거래금액</td>
+            <td>Kruskal-Wallis</td>
+            <td style="font-family:var(--font-mono)">3,180.25</td>
+            <td class="p-val">&lt;0.0001</td>
+            <td style="font-family:var(--font-mono)">η²=0.0089</td>
+            <td><span class="effect-badge effect-excess">검정력 과잉</span></td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>층 ↔ 거래금액</td>
+            <td>Spearman</td>
+            <td style="font-family:var(--font-mono)">ρ=0.1674</td>
+            <td class="p-val">&lt;0.0001</td>
+            <td style="font-family:var(--font-mono)">r²=0.0280</td>
+            <td><span class="effect-badge effect-small">약한 상관</span></td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>경과년수 ↔ 거래금액</td>
+            <td>Spearman</td>
+            <td style="font-family:var(--font-mono)">ρ=−0.1289</td>
+            <td class="p-val">&lt;0.0001</td>
+            <td style="font-family:var(--font-mono)">r²=0.0166</td>
+            <td><span class="effect-badge effect-small">약한 음의 상관</span></td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td><strong style="color:var(--white)">세대수 ↔ 거래금액</strong></td>
+            <td>Spearman</td>
+            <td style="font-family:var(--font-mono)">ρ=0.3237</td>
+            <td class="p-val">&lt;0.0001</td>
+            <td style="font-family:var(--font-mono)">r²=0.1048</td>
+            <td><span class="effect-badge effect-medium">★★ 중간 상관</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="stat-note">
+      ⚠️ 대표본 주의 (n=215,144): 8개 검정 모두 H0 기각이나,<br>재건축·계약월·층·경과년수는 효과 크기가 매우 작아 실질적 의미가 미미합니다.
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ SLIDE 6: KEY FINDINGS ═══════════════════════════════════════ -->
+<section class="slide" id="key-findings" data-index="5">
+  <span class="slide-num">06 / 08</span>
+  <div class="slide-inner">
+    <div class="section-label">Key Findings</div>
+    <h2>핵심 발견</h2>
+    <div class="findings-container">
+      <div class="finding-card">
+        <div>
+          <div class="finding-rank">#1</div>
+        </div>
+        <div>
+          <div class="finding-name">시군구 (지역)</div>
+          <div class="finding-effect">η² = 0.3931 — 설명력 39%</div>
+          <div class="finding-desc">
+            거래금액 분산의 <strong style="color:var(--gold-300)">39%를 설명</strong>하는 가장 강력한 요인.<br>
+            25개 자치구 중 91.7% 쌍에서 유의한 차이 확인.<br>
+            <strong style="color:var(--white)">강남·서초·용산</strong> 고가 지역 vs <strong style="color:var(--white)">노원·도봉·강북</strong> 저가 지역 격차 뚜렷.
+          </div>
+          <div class="effect-bar-container">
+            <div class="effect-bar-bg">
+              <div class="effect-bar-fill" style="width:78%;background:linear-gradient(90deg,var(--gold-400),var(--gold-200))"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="finding-card">
+        <div class="finding-rank">#2</div>
+        <div class="finding-name">전용면적</div>
+        <div class="finding-effect">r² = 0.3718 — 설명력 37%</div>
+        <div class="finding-desc">
+          강한 양의 상관 (ρ=0.61).<br>넓은 아파트일수록 가격이 높다.<br>비선형 관계 가능성 존재.
+        </div>
+        <div class="effect-bar-container">
+          <div class="effect-bar-bg">
+            <div class="effect-bar-fill" style="width:74%;background:linear-gradient(90deg,var(--blue-soft),#85c1e9)"></div>
+          </div>
+        </div>
+      </div>
+      <div class="finding-card">
+        <div class="finding-rank">#3</div>
+        <div class="finding-name">세대수</div>
+        <div class="finding-effect">r² = 0.1048 — 설명력 10%</div>
+        <div class="finding-desc">
+          중간 양의 상관 (ρ=0.32).<br>대단지 = 강남권·신도시 입지 효과 반영 가능성.
+        </div>
+        <div class="effect-bar-container">
+          <div class="effect-bar-bg">
+            <div class="effect-bar-fill" style="width:21%;background:linear-gradient(90deg,var(--green-soft),#82e0aa)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ SLIDE 7: VISUALIZATIONS ═══════════════════════════════════════ -->
+<section class="slide" id="visualizations" data-index="6">
+  <span class="slide-num">07 / 08</span>
+  <div class="slide-inner">
+    <div class="section-label">Data Visualization</div>
+    <h2>시각화 분석</h2>
+    <div class="viz-grid">
+      <!-- Effect Size Bar Chart -->
+      <div class="viz-panel">
+        <h3>효과 크기 비교 (8개 검정)</h3>
+        <div class="h-bar-chart">
+          <div class="h-bar-row">
+            <div class="h-bar-label">시군구</div>
+            <div class="h-bar-track"><div class="h-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--gold-400),var(--gold-200))"></div></div>
+            <div class="h-bar-value">0.393</div>
+          </div>
+          <div class="h-bar-row">
+            <div class="h-bar-label">전용면적</div>
+            <div class="h-bar-track"><div class="h-bar-fill" style="width:94.5%;background:linear-gradient(90deg,var(--gold-400),var(--gold-200))"></div></div>
+            <div class="h-bar-value">0.372</div>
+          </div>
+          <div class="h-bar-row">
+            <div class="h-bar-label">세대수</div>
+            <div class="h-bar-track"><div class="h-bar-fill" style="width:26.7%;background:linear-gradient(90deg,var(--blue-soft),#85c1e9)"></div></div>
+            <div class="h-bar-value">0.105</div>
+          </div>
+          <div class="h-bar-row">
+            <div class="h-bar-label">계약년도</div>
+            <div class="h-bar-track"><div class="h-bar-fill" style="width:8.4%;background:var(--slate)"></div></div>
+            <div class="h-bar-value">0.033</div>
+          </div>
+          <div class="h-bar-row">
+            <div class="h-bar-label">층</div>
+            <div class="h-bar-track"><div class="h-bar-fill" style="width:7.1%;background:var(--slate)"></div></div>
+            <div class="h-bar-value">0.028</div>
+          </div>
+          <div class="h-bar-row">
+            <div class="h-bar-label">경과년수</div>
+            <div class="h-bar-track"><div class="h-bar-fill" style="width:4.2%;background:var(--slate)"></div></div>
+            <div class="h-bar-value">0.017</div>
+          </div>
+          <div class="h-bar-row">
+            <div class="h-bar-label">재건축</div>
+            <div class="h-bar-track"><div class="h-bar-fill" style="width:3.7%;background:rgba(231,76,60,0.5)"></div></div>
+            <div class="h-bar-value">0.014</div>
+          </div>
+          <div class="h-bar-row">
+            <div class="h-bar-label">계약월</div>
+            <div class="h-bar-track"><div class="h-bar-fill" style="width:2.3%;background:rgba(231,76,60,0.5)"></div></div>
+            <div class="h-bar-value">0.009</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- District Ranking -->
+      <div class="viz-panel">
+        <h3>시군구별 거래금액 순위</h3>
+        <div class="district-chart">
+          <div class="district-row">
+            <div class="district-name" style="color:var(--gold-300)">강남구</div>
+            <div class="district-bar-track"><div class="district-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--gold-400),var(--gold-200))"></div></div>
+            <div class="district-value">22.8억</div>
+          </div>
+          <div class="district-row">
+            <div class="district-name" style="color:var(--gold-300)">서초구</div>
+            <div class="district-bar-track"><div class="district-bar-fill" style="width:87%;background:linear-gradient(90deg,var(--gold-400),var(--gold-200))"></div></div>
+            <div class="district-value">19.8억</div>
+          </div>
+          <div class="district-row">
+            <div class="district-name" style="color:var(--gold-300)">용산구</div>
+            <div class="district-bar-track"><div class="district-bar-fill" style="width:73%;background:linear-gradient(90deg,var(--gold-400),var(--gold-200))"></div></div>
+            <div class="district-value">16.6억</div>
+          </div>
+          <div class="district-row">
+            <div class="district-name" style="color:var(--gold-300)">송파구</div>
+            <div class="district-bar-track"><div class="district-bar-fill" style="width:67%;background:linear-gradient(90deg,var(--gold-400),var(--gold-200))"></div></div>
+            <div class="district-value">15.2억</div>
+          </div>
+          <div class="district-row">
+            <div class="district-name" style="color:var(--gold-300)">성동구</div>
+            <div class="district-bar-track"><div class="district-bar-fill" style="width:58%;background:linear-gradient(90deg,var(--gold-400),var(--gold-200))"></div></div>
+            <div class="district-value">13.2억</div>
+          </div>
+
+          <div class="district-divider">· · ·</div>
+
+          <div class="district-row">
+            <div class="district-name">금천구</div>
+            <div class="district-bar-track"><div class="district-bar-fill" style="width:22%;background:linear-gradient(90deg,var(--slate),#b0bec5)"></div></div>
+            <div class="district-value">5.0억</div>
+          </div>
+          <div class="district-row">
+            <div class="district-name">강북구</div>
+            <div class="district-bar-track"><div class="district-bar-fill" style="width:20%;background:linear-gradient(90deg,var(--slate),#b0bec5)"></div></div>
+            <div class="district-value">4.5억</div>
+          </div>
+          <div class="district-row">
+            <div class="district-name">도봉구</div>
+            <div class="district-bar-track"><div class="district-bar-fill" style="width:18%;background:linear-gradient(90deg,var(--slate),#b0bec5)"></div></div>
+            <div class="district-value">4.1억</div>
+          </div>
+          <div class="district-row">
+            <div class="district-name">중랑구</div>
+            <div class="district-bar-track"><div class="district-bar-fill" style="width:17%;background:linear-gradient(90deg,var(--slate),#b0bec5)"></div></div>
+            <div class="district-value">3.9억</div>
+          </div>
+          <div class="district-row">
+            <div class="district-name">노원구</div>
+            <div class="district-bar-track"><div class="district-bar-fill" style="width:16%;background:linear-gradient(90deg,var(--slate),#b0bec5)"></div></div>
+            <div class="district-value">3.6억</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ SLIDE 8: CONCLUSION ═══════════════════════════════════════ -->
+<section class="slide" id="conclusion" data-index="7">
+  <span class="slide-num">08 / 08</span>
+  <div class="slide-inner">
+    <div class="section-label">Conclusion</div>
+    <h2>결론</h2>
+    <div class="conclusion-answer">
+      <p>서울 아파트 거래금액은 <span class="highlight">시군구(지역)</span>과 <span class="highlight">전용면적(면적)</span>이 가격 분산의 약 <span class="highlight">76%</span>를 설명하며, 이 두 요인이 가격 결정의 핵심 축입니다.</p>
+    </div>
+    <div class="conclusion-grid">
+      <div class="conclusion-section">
+        <h3 style="color:var(--red-soft)">⚠️ 한계점</h3>
+        <ul>
+          <li>비모수 검정(순위 기반) — 그룹 간 평균 차이 별도 확인 필요</li>
+          <li>거래금액 우편향 분포 — 로그 변환 후 재분석 검토</li>
+          <li>시군구 효과가 다른 변수 효과를 혼재시킬 가능성 (교란 변수)</li>
+          <li>대표본(n=215,144) 검정력 과잉 — 효과 크기 병행 해석 필수</li>
+        </ul>
+      </div>
+      <div class="conclusion-section">
+        <h3 style="color:var(--green-soft)">🔮 후속 분석</h3>
+        <ul>
+          <li>시군구별 거래금액 박스플롯 시각화</li>
+          <li>전용면적 ↔ 거래금액 산점도 (비선형 확인)</li>
+          <li>다중회귀분석 — 시군구·전용면적·세대수 독립적 영향력 분리</li>
+          <li>거래금액 로그 변환 후 모수 검정 재분석</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ Save Toolbar ═══════════════ -->
+<div class="save-toolbar">
+  <button class="save-btn" onclick="savePDF()" title="PDF로 저장">🖨️ PDF 저장</button>
+  <button class="save-btn" onclick="downloadHTML()" title="HTML 파일 다운로드">💾 HTML 저장</button>
+</div>
+
+<!-- ═══════════════ Navigation ═══════════════ -->
+<nav class="nav-bar">
+  <div class="nav-dots" id="navDots"></div>
+  <div class="nav-hint">← → 키 또는 스크롤로 이동</div>
+</nav>
+
+<script>
+async function savePDF() {
+  const btn = document.querySelector('[onclick="savePDF()"]');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '⏳ 생성 중...';
+  btn.disabled = true;
+
+  // jsPDF + html2canvas CDN 동적 로드
+  async function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  try {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+    const slides = document.querySelectorAll('.slide');
+    const { jsPDF } = window.jspdf;
+    const dpr = window.devicePixelRatio || 1;
+    const scale = dpr * 2;
+
+    // 첫 슬라이드로 크기 기준 측정
+    const slideW = slides[0].offsetWidth;
+    const slideH = slides[0].offsetHeight;
+    const pdfW = slideW * 0.264583;  // px → mm (96dpi 기준)
+    const pdfH = slideH * 0.264583;
+
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: [pdfW, pdfH]
+    });
+
+    for (let i = 0; i < slides.length; i++) {
+      btn.innerHTML = `⏳ ${i + 1}/${slides.length} 처리 중...`;
+
+      slides[i].scrollIntoView({ behavior: 'instant' });
+
+      const canvas = await html2canvas(slides[i], {
+        scale: scale,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null,
+        width: slideW,
+        height: slideH,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: -slides[i].getBoundingClientRect().top
+      });
+
+
+      const imgData = canvas.toDataURL('image/png');
+
+      if (i > 0) pdf.addPage([pdfW, pdfH], 'landscape');
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH, '', 'FAST');
+    }
+
+    // 첫 슬라이드로 복귀
+    slides[0].scrollIntoView({ behavior: 'instant' });
+
+    pdf.save('서울아파트실거래가분석.pdf');
+  } catch (err) {
+    alert('PDF 생성 실패: 인터넷 연결을 확인해주세요.\n' + err.message);
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}
+
+function downloadHTML() {
+  const html = document.documentElement.outerHTML;
+  const blob = new Blob(['<!DOCTYPE html>\n' + html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'report_서울아파트실거래가분석.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+(function() {
+  const slides = document.querySelectorAll('.slide');
+  const navDots = document.getElementById('navDots');
+  let currentSlide = 0;
+
+  // Create nav dots
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goToSlide(i));
+    navDots.appendChild(dot);
+  });
+
+  function goToSlide(index) {
+    if (index < 0 || index >= slides.length) return;
+    currentSlide = index;
+    slides[index].scrollIntoView({ behavior: 'smooth' });
+    updateNav();
+  }
+
+  function updateNav() {
+    document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+      dot.classList.toggle('active', i === currentSlide);
+    });
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      goToSlide(currentSlide - 1);
+    }
+  });
+
+  // Nav dot sync on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        currentSlide = parseInt(entry.target.dataset.index);
+        updateNav();
+      }
+    });
+  }, { threshold: 0.5 });
+
+  slides.forEach(slide => observer.observe(slide));
+})();
+</script>
+</body>
+</html>

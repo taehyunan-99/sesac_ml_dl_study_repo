@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniversalBank 고객 대출 수락 분석</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --s: 1;
+    --navy: #1a3a5c;
+    --navy-mid: #254e7a;
+    --sky: #4a90d9;
+    --sky-light: #7fb3e8;
+    --sky-pale: #e8f2fb;
+    --white: #ffffff;
+    --gray-50: #f8f9fa;
+    --gray-100: #f0f2f5;
+    --gray-200: #e2e6ea;
+    --gray-400: #9aa3ad;
+    --gray-600: #5a6473;
+    --gray-800: #2c3340;
+    --accent-green: #2ecc71;
+    --accent-red: #e74c3c;
+    --accent-amber: #f39c12;
+    --slide-w: 1280px;
+    --slide-h: 720px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a1f2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    user-select: none;
+  }
+
+  /* ── 컨트롤러 UI ── */
+  #controls {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    background: rgba(26,31,46,0.95);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 100;
+    border-bottom: 1px solid rgba(74,144,217,0.2);
+  }
+
+  #controls .brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    color: var(--sky-light);
+    letter-spacing: 0.04em;
+  }
+
+  #slide-counter {
+    font-size: 12px;
+    color: var(--gray-400);
+    letter-spacing: 0.08em;
+    font-weight: 300;
+  }
+
+  #btn-pdf {
+    background: var(--sky);
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: background 0.2s;
+  }
+  #btn-pdf:hover { background: var(--navy-mid); }
+
+  /* ── 슬라이드 뷰포트 ── */
+  #viewport {
+    margin-top: 48px;
+    width: 100vw;
+    height: calc(100vh - 48px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #stage {
+    width: var(--slide-w);
+    height: var(--slide-h);
+    transform-origin: center center;
+    position: relative;
+  }
+
+  /* ── 슬라이드 공통 ── */
+  .slide {
+    position: absolute;
+    inset: 0;
+    width: var(--slide-w);
+    height: var(--slide-h);
+    background: var(--white);
+    display: none;
+    overflow: hidden;
+  }
+  .slide.active { display: flex; }
+
+  /* ── 네이비 사이드바 패턴 ── */
+  .slide-sidebar {
+    width: 8px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--navy) 0%, var(--sky) 100%);
+    flex-shrink: 0;
+  }
+
+  .slide-content {
+    flex: 1;
+    padding: 52px 64px 40px 56px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── 슬라이드 헤더 ── */
+  .slide-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--sky);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .slide-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--navy);
+    line-height: 1.15;
+    margin-bottom: 28px;
+  }
+
+  .title-divider {
+    width: 48px;
+    height: 3px;
+    background: var(--sky);
+    margin-bottom: 28px;
+  }
+
+  /* ── 슬라이드 1: 표지 ── */
+  #slide-1 {
+    background: var(--navy);
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 80px 100px;
+  }
+
+  #slide-1 .cover-tag {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--sky-light);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  #slide-1 .cover-tag::before {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 2px;
+    background: var(--sky);
+  }
+
+  #slide-1 .cover-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 62px;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: 20px;
+    max-width: 780px;
+  }
+
+  #slide-1 .cover-subtitle {
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--sky-light);
+    margin-bottom: 48px;
+    letter-spacing: 0.02em;
+  }
+
+  #slide-1 .cover-meta {
+    display: flex;
+    gap: 40px;
+  }
+
+  #slide-1 .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  #slide-1 .meta-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--sky);
+    text-transform: uppercase;
+  }
+
+  #slide-1 .meta-value {
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    font-weight: 300;
+  }
+
+  #slide-1 .cover-deco {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 420px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  /* ── 슬라이드 2: 문제 정의 ── */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    flex: 1;
+  }
+
+  .problem-card {
+    background: var(--gray-50);
+    border-top: 3px solid var(--sky);
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .problem-card.full-width {
+    grid-column: 1 / -1;
+    background: var(--sky-pale);
+    border-top-color: var(--navy);
+  }
+
+  .card-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--sky);
+    text-transform: uppercase;
+  }
+
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--navy);
+  }
+
+  .card-body {
+    font-size: 13.5px;
+    color: var(--gray-600);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  .method-steps {
+    display: flex;
+    gap: 0;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .method-step {
+    background: var(--navy);
+    color: var(--white);
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    border-radius: 2px;
+  }
+
+  .method-arrow {
+    color: var(--sky);
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  /* ── 슬라이드 3: 데이터 개요 ── */
+  .data-overview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.2fr;
+    gap: 20px;
+    flex: 1;
+  }
+
+  .stat-box {
+    background: var(--navy);
+    color: var(--white);
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-box::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    width: 80px;
+    height: 80px;
+    background: rgba(74,144,217,0.15);
+    border-radius: 50%;
+  }
+
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--sky-light);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-unit {
+    font-size: 18px;
+    color: var(--sky-light);
+    font-weight: 300;
+  }
+
+  .stat-desc {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    font-weight: 300;
+    letter-spacing: 0.05em;
+  }
+
+  .var-list-box {
+    background: var(--gray-50);
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .var-list-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--sky);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .var-tag {
+    display: inline-block;
+    background: var(--sky-pale);
+    color: var(--navy);
+    padding: 4px 10px;
+    font-size: 11.5px;
+    font-weight: 500;
+    border-radius: 2px;
+    margin: 2px 3px 2px 0;
+    border: 1px solid rgba(74,144,217,0.3);
+  }
+
+  .var-tag.target {
+    background: var(--navy);
+    color: var(--white);
+    border-color: var(--navy);
+  }
+
+  .donut-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .donut-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--sky);
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  /* ── 슬라이드 4: 데이터 품질 ── */
+  .quality-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    flex: 1;
+  }
+
+  .quality-card {
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .quality-card.ok {
+    background: #f0faf5;
+    border-left: 4px solid var(--accent-green);
+  }
+
+  .quality-card.warn {
+    background: #fff8f0;
+    border-left: 4px solid var(--accent-amber);
+  }
+
+  .quality-card.info {
+    background: var(--sky-pale);
+    border-left: 4px solid var(--sky);
+  }
+
+  .quality-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .status-dot.green { background: var(--accent-green); }
+  .status-dot.amber { background: var(--accent-amber); }
+  .status-dot.blue { background: var(--sky); }
+
+  .quality-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--gray-400);
+    text-transform: uppercase;
+  }
+
+  .quality-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--navy);
+  }
+
+  .quality-body {
+    font-size: 13px;
+    color: var(--gray-600);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .quality-highlight {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 38px;
+    font-weight: 700;
+    color: var(--accent-green);
+  }
+
+  /* ── 슬라이드 5: 전처리 ── */
+  .preproc-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+
+  .preproc-table thead tr {
+    background: var(--navy);
+    color: var(--white);
+  }
+
+  .preproc-table th {
+    padding: 12px 20px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .preproc-table td {
+    padding: 11px 20px;
+    font-size: 13.5px;
+    color: var(--gray-800);
+    border-bottom: 1px solid var(--gray-200);
+    font-weight: 300;
+  }
+
+  .preproc-table tr:nth-child(even) td {
+    background: var(--gray-50);
+  }
+
+  .preproc-table .changed {
+    color: var(--sky);
+    font-weight: 500;
+  }
+
+  .preproc-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  .preproc-tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    padding: 8px 16px;
+    font-size: 13px;
+    color: var(--gray-800);
+    font-weight: 400;
+  }
+
+  .preproc-tag span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--sky);
+    border-radius: 50%;
+  }
+
+  /* ── 슬라이드 6: 상관관계 ── */
+  .corr-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    flex: 1;
+  }
+
+  .corr-panel {
+    background: var(--gray-50);
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .corr-panel-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--sky);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .corr-bar-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .corr-bar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .corr-bar-label {
+    font-size: 13px;
+    color: var(--gray-800);
+    font-weight: 400;
+  }
+
+  .corr-bar-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  .corr-bar-track {
+    height: 6px;
+    background: var(--gray-200);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .corr-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--navy), var(--sky));
+  }
+
+  .corr-warn {
+    background: #fff3e0;
+    border: 1px solid #ffe0b2;
+    padding: 14px 16px;
+    font-size: 12.5px;
+    color: #7d4e00;
+    line-height: 1.6;
+  }
+
+  .corr-warn strong {
+    color: var(--accent-amber);
+    font-weight: 700;
+  }
+
+  /* ── 슬라이드 7: 통계 테이블 ── */
+  .stat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    flex: 1;
+  }
+
+  .stat-table thead tr {
+    background: var(--navy);
+    color: var(--white);
+    position: sticky;
+    top: 0;
+  }
+
+  .stat-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .stat-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--gray-800);
+    font-weight: 300;
+    line-height: 1.4;
+  }
+
+  .stat-table tr:nth-child(even) td {
+    background: var(--gray-50);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .badge.reject {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  .badge.fail {
+    background: #fafafa;
+    color: var(--gray-400);
+    border: 1px solid var(--gray-200);
+  }
+
+  .effect-large { color: #c0392b; font-weight: 700; }
+  .effect-medium { color: #d35400; font-weight: 500; }
+  .effect-small { color: var(--sky); }
+  .effect-none { color: var(--gray-400); }
+
+  /* ── 슬라이드 8: 핵심 발견 ── */
+  .findings-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    flex: 1;
+  }
+
+  .finding-card {
+    background: var(--gray-50);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 24px;
+    position: relative;
+    overflow: hidden;
+    gap: 12px;
+  }
+
+  .finding-rank {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 80px;
+    font-weight: 700;
+    color: rgba(74,144,217,0.1);
+    position: absolute;
+    right: 16px;
+    top: -8px;
+    line-height: 1;
+  }
+
+  .finding-var {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  .finding-effect {
+    display: inline-block;
+    background: var(--navy);
+    color: var(--sky-light);
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    align-self: flex-start;
+  }
+
+  .finding-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .finding-vs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .finding-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .finding-num.accept { color: var(--sky); }
+  .finding-num.reject-color { color: var(--gray-400); }
+
+  .finding-vs-label {
+    font-size: 11px;
+    color: var(--gray-400);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  .finding-multi {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  .finding-multi-label {
+    font-size: 12px;
+    color: var(--sky);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  .finding-desc {
+    font-size: 12px;
+    color: var(--gray-600);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .large-sample-notice {
+    background: #fff8e1;
+    border-left: 4px solid var(--accent-amber);
+    padding: 10px 18px;
+    font-size: 12px;
+    color: #7d5200;
+    margin-top: 12px;
+    font-weight: 400;
+  }
+
+  /* ── 슬라이드 9: 변수 선택 ── */
+  .var-select-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    flex: 1;
+  }
+
+  .remove-list, .keep-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .var-select-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--sky);
+    text-transform: uppercase;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--gray-200);
+    margin-bottom: 4px;
+  }
+
+  .remove-item {
+    background: #fef5f5;
+    border-left: 3px solid var(--accent-red);
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .remove-item-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent-red);
+  }
+
+  .remove-item-reason {
+    font-size: 12px;
+    color: var(--gray-600);
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  .keep-item {
+    background: var(--gray-50);
+    border-left: 3px solid var(--sky);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .keep-item-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--navy);
+  }
+
+  .keep-item-effect {
+    font-size: 11px;
+    color: var(--sky);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── 슬라이드 10: 결론 ── */
+  .conclusion-layout {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 24px;
+    flex: 1;
+  }
+
+  .conclusion-main {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .conclusion-statement {
+    background: var(--navy);
+    color: var(--white);
+    padding: 24px 28px;
+    font-size: 15px;
+    line-height: 1.75;
+    font-weight: 300;
+  }
+
+  .conclusion-statement strong {
+    color: var(--sky-light);
+    font-weight: 700;
+  }
+
+  .conclusion-key-vars {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .conclusion-var {
+    background: var(--sky-pale);
+    border: 1px solid rgba(74,144,217,0.4);
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--navy);
+  }
+
+  .next-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .next-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--sky);
+    text-transform: uppercase;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--gray-200);
+  }
+
+  .next-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .next-num {
+    width: 22px;
+    height: 22px;
+    background: var(--navy);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .next-text {
+    font-size: 13px;
+    color: var(--gray-600);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .next-text strong {
+    color: var(--navy);
+    font-weight: 600;
+  }
+
+  /* ── 네비게이션 ── */
+  .nav-btn {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    background: rgba(26,58,92,0.8);
+    color: var(--white);
+    border: 1px solid rgba(74,144,217,0.3);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    transition: background 0.2s;
+    border-radius: 2px;
+    backdrop-filter: blur(4px);
+  }
+  .nav-btn:hover { background: var(--navy); }
+  #btn-prev { left: 16px; }
+  #btn-next { right: 16px; }
+
+  /* ── 슬라이드 도트 인디케이터 ── */
+  #dots {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 50;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  .dot.active {
+    background: var(--sky);
+    transform: scale(1.4);
+  }
+
+  /* ── 슬라이드 번호 ── */
+  .slide-num {
+    position: absolute;
+    bottom: 24px;
+    right: 28px;
+    font-size: 11px;
+    color: var(--gray-400);
+    letter-spacing: 0.1em;
+    font-weight: 300;
+  }
+
+  /* ── PDF 로딩 오버레이 ── */
+  #pdf-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,31,46,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+  #pdf-overlay.active { display: flex; }
+  #pdf-overlay p {
+    color: var(--white);
+    font-size: 14px;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<!-- 컨트롤 바 -->
+<div id="controls">
+  <span class="brand">UniversalBank · 고객 대출 수락 분석</span>
+  <span id="slide-counter">1 / 10</span>
+  <button id="btn-pdf">PDF 저장</button>
+</div>
+
+<!-- 좌우 버튼 -->
+<button class="nav-btn" id="btn-prev">&#8592;</button>
+<button class="nav-btn" id="btn-next">&#8594;</button>
+
+<!-- 뷰포트 -->
+<div id="viewport">
+  <div id="stage">
+
+    <!-- ═══════════════════════════════════════════
+         슬라이드 1: 표지
+    ═══════════════════════════════════════════ -->
+    <div class="slide active" id="slide-1">
+      <div class="cover-deco">
+        <svg width="420" height="720" viewBox="0 0 420 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="60" y="0" width="1" height="720" fill="rgba(74,144,217,0.15)"/>
+          <rect x="120" y="0" width="1" height="720" fill="rgba(74,144,217,0.1)"/>
+          <rect x="180" y="0" width="1" height="720" fill="rgba(74,144,217,0.08)"/>
+          <rect x="240" y="0" width="1" height="720" fill="rgba(74,144,217,0.06)"/>
+          <rect x="300" y="0" width="1" height="720" fill="rgba(74,144,217,0.04)"/>
+          <rect x="360" y="0" width="1" height="720" fill="rgba(74,144,217,0.03)"/>
+          <circle cx="200" cy="360" r="260" stroke="rgba(74,144,217,0.08)" stroke-width="1"/>
+          <circle cx="200" cy="360" r="200" stroke="rgba(74,144,217,0.06)" stroke-width="1"/>
+          <circle cx="200" cy="360" r="140" stroke="rgba(74,144,217,0.05)" stroke-width="1"/>
+          <circle cx="200" cy="360" r="80" stroke="rgba(74,144,217,0.05)" stroke-width="1"/>
+        </svg>
+      </div>
+
+      <div class="cover-tag">데이터 분석 보고서</div>
+      <div class="cover-title">UniversalBank<br>고객 대출<br>수락 분석</div>
+      <div class="cover-subtitle">개인 대출(PLoan) 수락 여부 예측 변수 탐색</div>
+      <div class="cover-meta">
+        <div class="meta-item">
+          <span class="meta-label">날짜</span>
+          <span class="meta-value">2026-03-29</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">데이터</span>
+          <span class="meta-value">UniversalBank.csv · 5,000행</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">분석 방법</span>
+          <span class="meta-value">EDA · 전처리 · 통계 검정</span>
+        </div>
+      </div>
+      <div class="slide-num" style="color:rgba(255,255,255,0.3);">01 / 10</div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         슬라이드 2: 문제 정의
+    ═══════════════════════════════════════════ -->
+    <div class="slide" id="slide-2">
+      <div class="slide-sidebar"></div>
+      <div class="slide-content">
+        <div class="slide-label">Problem Definition</div>
+        <div class="slide-title">문제 정의</div>
+        <div class="title-divider"></div>
+        <div class="problem-grid">
+          <div class="problem-card">
+            <div class="card-label">배경</div>
+            <div class="card-title">분석 배경</div>
+            <div class="card-body">
+              은행의 고객 5,000명 데이터를 기반으로 개인 대출 수락 여부를 결정하는 핵심 요인을 파악한다. 대출 상품 마케팅 효율화 및 타겟 고객 프로파일링을 목적으로 한다.
+            </div>
+          </div>
+          <div class="problem-card">
+            <div class="card-label">연구 질문</div>
+            <div class="card-title">핵심 질문</div>
+            <div class="card-body">
+              어떤 고객 특성이 개인 대출(PLoan) 수락과 통계적으로 유의한 관계를 갖는가?<br><br>
+              효과 크기를 기준으로 실질적으로 의미 있는 변수는 무엇인가?
+            </div>
+          </div>
+          <div class="problem-card full-width">
+            <div class="card-label">분석 방법론</div>
+            <div class="card-title">분석 파이프라인</div>
+            <div class="method-steps">
+              <span class="method-step">EDA</span>
+              <span class="method-arrow">→</span>
+              <span class="method-step">데이터 전처리</span>
+              <span class="method-arrow">→</span>
+              <span class="method-step">Mann-Whitney U</span>
+              <span class="method-arrow">→</span>
+              <span class="method-step">Kruskal-Wallis</span>
+              <span class="method-arrow">→</span>
+              <span class="method-step">카이제곱</span>
+              <span class="method-arrow">→</span>
+              <span class="method-step">Spearman 상관</span>
+            </div>
+          </div>
+        </div>
+        <div class="slide-num">02 / 10</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         슬라이드 3: 데이터 개요
+    ═══════════════════════════════════════════ -->
+    <div class="slide" id="slide-3">
+      <div class="slide-sidebar"></div>
+      <div class="slide-content">
+        <div class="slide-label">Data Overview</div>
+        <div class="slide-title">데이터 개요</div>
+        <div class="title-divider"></div>
+        <div class="data-overview-grid">
+          <!-- 좌측: 수치 박스 2개 -->
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div class="stat-box">
+              <div class="stat-num">5,000 <span class="stat-unit">행</span></div>
+              <div class="stat-desc">UniversalBank.csv 전체 샘플</div>
+            </div>
+            <div class="stat-box" style="background:var(--navy-mid);">
+              <div class="stat-num">10 <span class="stat-unit">열</span></div>
+              <div class="stat-desc">8 수치형 · 2 범주형</div>
+            </div>
+          </div>
+
+          <!-- 중앙: 변수 목록 -->
+          <div class="var-list-box">
+            <div class="var-list-title">변수 구성</div>
+            <div>
+              <div style="font-size:11px;color:var(--gray-400);margin-bottom:4px;font-weight:700;letter-spacing:0.08em;">수치형 (8)</div>
+              <span class="var-tag">Age</span>
+              <span class="var-tag">Experience</span>
+              <span class="var-tag">Income</span>
+              <span class="var-tag">Family</span>
+              <span class="var-tag">CCAvg</span>
+              <span class="var-tag">Education</span>
+              <span class="var-tag">Mortgage</span>
+              <span class="var-tag" style="border-color:var(--sky);color:var(--sky);">HasMortgage (+)</span>
+            </div>
+            <div style="margin-top:12px;">
+              <div style="font-size:11px;color:var(--gray-400);margin-bottom:4px;font-weight:700;letter-spacing:0.08em;">범주형 (2)</div>
+              <span class="var-tag">CDAccount</span>
+              <span class="var-tag target">PLoan ★ 타겟</span>
+            </div>
+            <div style="margin-top:12px;font-size:12px;color:var(--gray-400);font-weight:300;line-height:1.6;">
+              ID 컬럼 제거 · Mortgage에서 HasMortgage 이진 변수 파생
+            </div>
+          </div>
+
+          <!-- 우측: 도넛 차트 -->
+          <div class="donut-box">
+            <div class="donut-title">타겟 분포 (PLoan)</div>
+            <svg width="200" height="200" viewBox="0 0 200 200">
+              <!-- 미수락 90.4% -->
+              <circle cx="100" cy="100" r="75"
+                fill="none"
+                stroke="#e2e6ea"
+                stroke-width="28"/>
+              <!-- 수락 9.6% -->
+              <circle cx="100" cy="100" r="75"
+                fill="none"
+                stroke="var(--sky)"
+                stroke-width="28"
+                stroke-dasharray="45.2 425.8"
+                stroke-dashoffset="117.8"
+                transform="rotate(-90 100 100)"/>
+              <text x="100" y="92" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="28" font-weight="700" fill="var(--navy)">9.6%</text>
+              <text x="100" y="112" text-anchor="middle" font-family="'Noto Sans KR',sans-serif" font-size="11" fill="var(--gray-400)">수락</text>
+            </svg>
+            <div style="display:flex;gap:20px;font-size:12px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="width:10px;height:10px;background:var(--sky);border-radius:50%;"></div>
+                <span style="color:var(--gray-600);">수락 480명</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="width:10px;height:10px;background:var(--gray-200);border-radius:50%;"></div>
+                <span style="color:var(--gray-600);">미수락 4,520명</span>
+              </div>
+            </div>
+            <div style="font-size:11.5px;color:var(--accent-red);font-weight:600;letter-spacing:0.04em;">&#9888; 클래스 불균형 (9.6% : 90.4%)</div>
+          </div>
+        </div>
+        <div class="slide-num">03 / 10</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         슬라이드 4: 데이터 품질
+    ═══════════════════════════════════════════ -->
+    <div class="slide" id="slide-4">
+      <div class="slide-sidebar"></div>
+      <div class="slide-content">
+        <div class="slide-label">Data Quality</div>
+        <div class="slide-title">데이터 품질</div>
+        <div class="title-divider"></div>
+        <div class="quality-grid">
+          <div class="quality-card ok">
+            <div class="quality-status">
+              <div class="status-dot green"></div>
+              <span class="quality-label">결측값</span>
+            </div>
+            <div class="quality-highlight">0건</div>
+            <div class="quality-body">전체 5,000행 × 10열에서 결측값이 발견되지 않음. 별도의 결측값 처리 불필요.</div>
+          </div>
+
+          <div class="quality-card ok">
+            <div class="quality-status">
+              <div class="status-dot green"></div>
+              <span class="quality-label">중복 행</span>
+            </div>
+            <div class="quality-highlight">0건</div>
+            <div class="quality-body">중복 레코드 없음. 모든 행이 독립적인 고객 데이터로 구성됨.</div>
+          </div>
+
+          <div class="quality-card warn">
+            <div class="quality-status">
+              <div class="status-dot amber"></div>
+              <span class="quality-label">이상치 · 입력 오류</span>
+            </div>
+            <div class="quality-title">Experience 음수값 52건</div>
+            <div class="quality-body">
+              경력(Experience)이 음수인 52건 발견 → 입력 오류 판단.<br>
+              <strong>처리 방법</strong>: Age 기반 추정값으로 대체<br>
+              <code style="font-size:11px;background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:2px;">Experience = Age - offset (offset &#8776; 25.0)</code>
+            </div>
+          </div>
+
+          <div class="quality-card info">
+            <div class="quality-status">
+              <div class="status-dot blue"></div>
+              <span class="quality-label">분포 특성</span>
+            </div>
+            <div class="quality-title">우측 편향 변수</div>
+            <div class="quality-body">
+              Income, CCAvg, Mortgage 세 변수는 우측 편향(right-skewed) 분포.<br>
+              고소득·고지출 극소수 고객의 영향으로, <strong>도메인상 정상적인 분포</strong>로 판단. 별도 변환 없이 비모수 검정(Mann-Whitney U) 적용.
+            </div>
+          </div>
+        </div>
+        <div class="slide-num">04 / 10</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         슬라이드 5: 전처리 요약
+    ═══════════════════════════════════════════ -->
+    <div class="slide" id="slide-5">
+      <div class="slide-sidebar"></div>
+      <div class="slide-content">
+        <div class="slide-label">Preprocessing</div>
+        <div class="slide-title">전처리 요약</div>
+        <div class="title-divider"></div>
+
+        <table class="preproc-table">
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>전처리 전</th>
+              <th>전처리 후</th>
+              <th>처리 내용</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>행 수</td>
+              <td>5,000</td>
+              <td>5,000</td>
+              <td>유지</td>
+            </tr>
+            <tr>
+              <td>열 수</td>
+              <td>10</td>
+              <td class="changed">10</td>
+              <td class="changed">ID 제거(−1) · HasMortgage 추가(+1) → 순 변화 없음</td>
+            </tr>
+            <tr>
+              <td>Experience 음수</td>
+              <td>52건</td>
+              <td class="changed">0건</td>
+              <td class="changed">Age 기반 추정값으로 대체 (offset = 25.0)</td>
+            </tr>
+            <tr>
+              <td>CDAccount / PLoan</td>
+              <td>Yes / No 문자열</td>
+              <td class="changed">1 / 0 정수</td>
+              <td class="changed">이진 인코딩</td>
+            </tr>
+            <tr>
+              <td>Mortgage</td>
+              <td>연속형 금액</td>
+              <td class="changed">+ HasMortgage 파생</td>
+              <td class="changed">Mortgage &gt; 0 이면 1, 아니면 0 (이진 변수 분리)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;color:var(--sky);text-transform:uppercase;margin-bottom:10px;">주요 처리 단계</div>
+        <div class="preproc-tags">
+          <div class="preproc-tag"><span></span>ID 컬럼 제거</div>
+          <div class="preproc-tag"><span></span>Experience 음수 → Age 기반 대체</div>
+          <div class="preproc-tag"><span></span>Mortgage 이진 변수 분리</div>
+          <div class="preproc-tag"><span></span>CDAccount · PLoan 인코딩 (0/1)</div>
+          <div class="preproc-tag"><span></span>저장: UniversalBank_cleaned.csv</div>
+        </div>
+        <div class="slide-num">05 / 10</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         슬라이드 6: 상관관계
+    ═══════════════════════════════════════════ -->
+    <div class="slide" id="slide-6">
+      <div class="slide-sidebar"></div>
+      <div class="slide-content">
+        <div class="slide-label">Correlation Analysis</div>
+        <div class="slide-title">주요 상관관계</div>
+        <div class="title-divider"></div>
+        <div class="corr-layout">
+          <div class="corr-panel">
+            <div class="corr-panel-title">Spearman 상관계수</div>
+
+            <div class="corr-bar-item">
+              <div class="corr-bar-header">
+                <span class="corr-bar-label">Age &#x2194; Experience</span>
+                <span class="corr-bar-value" style="color:var(--accent-red);">r = 0.994</span>
+              </div>
+              <div class="corr-bar-track">
+                <div class="corr-bar-fill" style="width:99.4%;background:linear-gradient(90deg,var(--accent-red),#e67e22);"></div>
+              </div>
+              <div style="font-size:11px;color:var(--gray-400);font-weight:300;">거의 완벽한 양의 상관 — 다중공선성 위험</div>
+            </div>
+
+            <div class="corr-bar-item" style="margin-top:8px;">
+              <div class="corr-bar-header">
+                <span class="corr-bar-label">Income &#x2194; CCAvg</span>
+                <span class="corr-bar-value">r = 0.580</span>
+              </div>
+              <div class="corr-bar-track">
+                <div class="corr-bar-fill" style="width:58%;"></div>
+              </div>
+              <div style="font-size:11px;color:var(--gray-400);font-weight:300;">중간 강도의 양의 상관 — 고소득 고객이 카드 지출도 높음</div>
+            </div>
+
+            <div class="corr-bar-item" style="margin-top:8px;">
+              <div class="corr-bar-header">
+                <span class="corr-bar-label">Age / Experience &#x2194; PLoan</span>
+                <span class="corr-bar-value" style="color:var(--gray-400);">p = 0.56</span>
+              </div>
+              <div class="corr-bar-track">
+                <div class="corr-bar-fill" style="width:3%;background:var(--gray-400);"></div>
+              </div>
+              <div style="font-size:11px;color:var(--gray-400);font-weight:300;">통계적으로 유의하지 않음 (p &gt; 0.05)</div>
+            </div>
+
+            <div class="corr-warn" style="margin-top:8px;">
+              <strong>&#9888; 다중공선성 경고</strong><br>
+              Age와 Experience의 r=0.994는 사실상 동일한 정보. 모델 투입 시 반드시 하나 제거 필요. VIF 극단적으로 높을 것으로 예상.
+            </div>
+          </div>
+
+          <div class="corr-panel">
+            <div class="corr-panel-title">상관관계 히트맵 (주요 변수)</div>
+            <svg width="100%" height="100%" viewBox="0 0 360 340" style="max-height:320px;">
+              <text x="65" y="62" text-anchor="middle" font-size="10" fill="#9aa3ad">Age</text>
+              <text x="115" y="62" text-anchor="middle" font-size="10" fill="#9aa3ad">Exp</text>
+              <text x="165" y="62" text-anchor="middle" font-size="10" fill="#9aa3ad">Income</text>
+              <text x="215" y="62" text-anchor="middle" font-size="10" fill="#9aa3ad">CCAvg</text>
+              <text x="265" y="62" text-anchor="middle" font-size="10" fill="#9aa3ad">PLoan</text>
+              <text x="315" y="62" text-anchor="middle" font-size="10" fill="#9aa3ad">CD</text>
+
+              <text x="50" y="88" text-anchor="end" font-size="10" fill="#9aa3ad">Age</text>
+              <text x="50" y="138" text-anchor="end" font-size="10" fill="#9aa3ad">Exp</text>
+              <text x="50" y="188" text-anchor="end" font-size="10" fill="#9aa3ad">Income</text>
+              <text x="50" y="238" text-anchor="end" font-size="10" fill="#9aa3ad">CCAvg</text>
+              <text x="50" y="288" text-anchor="end" font-size="10" fill="#9aa3ad">PLoan</text>
+
+              <!-- Age행 -->
+              <rect x="40" y="68" width="46" height="38" fill="#1a3a5c" rx="2"/>
+              <text x="63" y="92" text-anchor="middle" font-size="11" fill="white">1.00</text>
+              <rect x="90" y="68" width="46" height="38" fill="#c0392b" rx="2"/>
+              <text x="113" y="92" text-anchor="middle" font-size="11" fill="white">.994</text>
+              <rect x="140" y="68" width="46" height="38" fill="#e8f0fa" rx="2"/>
+              <text x="163" y="92" text-anchor="middle" font-size="10" fill="#5a6473">.03</text>
+              <rect x="190" y="68" width="46" height="38" fill="#f0f2f5" rx="2"/>
+              <text x="213" y="92" text-anchor="middle" font-size="10" fill="#9aa3ad">.01</text>
+              <rect x="240" y="68" width="46" height="38" fill="#f8f9fa" rx="2"/>
+              <text x="263" y="92" text-anchor="middle" font-size="10" fill="#9aa3ad">-.01</text>
+              <rect x="290" y="68" width="46" height="38" fill="#f8f9fa" rx="2"/>
+              <text x="313" y="92" text-anchor="middle" font-size="10" fill="#9aa3ad">.01</text>
+
+              <!-- Exp행 -->
+              <rect x="40" y="118" width="46" height="38" fill="#c0392b" rx="2"/>
+              <text x="63" y="142" text-anchor="middle" font-size="11" fill="white">.994</text>
+              <rect x="90" y="118" width="46" height="38" fill="#1a3a5c" rx="2"/>
+              <text x="113" y="142" text-anchor="middle" font-size="11" fill="white">1.00</text>
+              <rect x="140" y="118" width="46" height="38" fill="#f0f2f5" rx="2"/>
+              <text x="163" y="142" text-anchor="middle" font-size="10" fill="#9aa3ad">.02</text>
+              <rect x="190" y="118" width="46" height="38" fill="#f0f2f5" rx="2"/>
+              <text x="213" y="142" text-anchor="middle" font-size="10" fill="#9aa3ad">.01</text>
+              <rect x="240" y="118" width="46" height="38" fill="#f8f9fa" rx="2"/>
+              <text x="263" y="142" text-anchor="middle" font-size="10" fill="#9aa3ad">-.01</text>
+              <rect x="290" y="118" width="46" height="38" fill="#f8f9fa" rx="2"/>
+              <text x="313" y="142" text-anchor="middle" font-size="10" fill="#9aa3ad">.02</text>
+
+              <!-- Income행 -->
+              <rect x="40" y="168" width="46" height="38" fill="#f0f2f5" rx="2"/>
+              <text x="63" y="192" text-anchor="middle" font-size="10" fill="#9aa3ad">.03</text>
+              <rect x="90" y="168" width="46" height="38" fill="#f0f2f5" rx="2"/>
+              <text x="113" y="192" text-anchor="middle" font-size="10" fill="#9aa3ad">.02</text>
+              <rect x="140" y="168" width="46" height="38" fill="#1a3a5c" rx="2"/>
+              <text x="163" y="192" text-anchor="middle" font-size="11" fill="white">1.00</text>
+              <rect x="190" y="168" width="46" height="38" fill="#4a90d9" rx="2" opacity="0.7"/>
+              <text x="213" y="192" text-anchor="middle" font-size="11" fill="white">.580</text>
+              <rect x="240" y="168" width="46" height="38" fill="#4a90d9" rx="2" opacity="0.9"/>
+              <text x="263" y="192" text-anchor="middle" font-size="11" fill="white">.502</text>
+              <rect x="290" y="168" width="46" height="38" fill="#7fb3e8" rx="2"/>
+              <text x="313" y="192" text-anchor="middle" font-size="11" fill="white">.352</text>
+
+              <!-- CCAvg행 -->
+              <rect x="40" y="218" width="46" height="38" fill="#f0f2f5" rx="2"/>
+              <text x="63" y="242" text-anchor="middle" font-size="10" fill="#9aa3ad">.01</text>
+              <rect x="90" y="218" width="46" height="38" fill="#f0f2f5" rx="2"/>
+              <text x="113" y="242" text-anchor="middle" font-size="10" fill="#9aa3ad">.01</text>
+              <rect x="140" y="218" width="46" height="38" fill="#4a90d9" rx="2" opacity="0.7"/>
+              <text x="163" y="242" text-anchor="middle" font-size="11" fill="white">.580</text>
+              <rect x="190" y="218" width="46" height="38" fill="#1a3a5c" rx="2"/>
+              <text x="213" y="242" text-anchor="middle" font-size="11" fill="white">1.00</text>
+              <rect x="240" y="218" width="46" height="38" fill="#4a90d9" rx="2" opacity="0.65"/>
+              <text x="263" y="242" text-anchor="middle" font-size="11" fill="white">.371</text>
+              <rect x="290" y="218" width="46" height="38" fill="#7fb3e8" rx="2" opacity="0.7"/>
+              <text x="313" y="242" text-anchor="middle" font-size="11" fill="white">.240</text>
+
+              <!-- PLoan행 -->
+              <rect x="40" y="268" width="46" height="38" fill="#f8f9fa" rx="2"/>
+              <text x="63" y="292" text-anchor="middle" font-size="10" fill="#9aa3ad">-.01</text>
+              <rect x="90" y="268" width="46" height="38" fill="#f8f9fa" rx="2"/>
+              <text x="113" y="292" text-anchor="middle" font-size="10" fill="#9aa3ad">-.01</text>
+              <rect x="140" y="268" width="46" height="38" fill="#4a90d9" rx="2" opacity="0.9"/>
+              <text x="163" y="292" text-anchor="middle" font-size="11" fill="white">.502</text>
+              <rect x="190" y="268" width="46" height="38" fill="#4a90d9" rx="2" opacity="0.65"/>
+              <text x="213" y="292" text-anchor="middle" font-size="11" fill="white">.371</text>
+              <rect x="240" y="268" width="46" height="38" fill="#1a3a5c" rx="2"/>
+              <text x="263" y="292" text-anchor="middle" font-size="11" fill="white">1.00</text>
+              <rect x="290" y="268" width="46" height="38" fill="#4a90d9" rx="2" opacity="0.5"/>
+              <text x="313" y="292" text-anchor="middle" font-size="11" fill="white">.315</text>
+            </svg>
+          </div>
+        </div>
+        <div class="slide-num">06 / 10</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         슬라이드 7: 통계 분석 결과 테이블
+    ═══════════════════════════════════════════ -->
+    <div class="slide" id="slide-7">
+      <div class="slide-sidebar"></div>
+      <div class="slide-content" style="padding-bottom:28px;">
+        <div class="slide-label">Statistical Test Results</div>
+        <div class="slide-title">통계 분석 결과</div>
+        <div class="title-divider"></div>
+        <table class="stat-table">
+          <thead>
+            <tr>
+              <th>연구 질문</th>
+              <th>검정</th>
+              <th>p-value</th>
+              <th>결론</th>
+              <th>효과 크기</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>PLoan &rarr; Income</td>
+              <td>Mann-Whitney U</td>
+              <td>~0</td>
+              <td><span class="badge reject">H0 기각</span></td>
+              <td><span class="effect-large">d=2.16 (매우 큼)</span></td>
+            </tr>
+            <tr>
+              <td>PLoan &rarr; CCAvg</td>
+              <td>Mann-Whitney U</td>
+              <td>~0</td>
+              <td><span class="badge reject">H0 기각</span></td>
+              <td><span class="effect-large">d=1.18 (큼)</span></td>
+            </tr>
+            <tr>
+              <td>PLoan &rarr; Age</td>
+              <td>Mann-Whitney U</td>
+              <td>0.564</td>
+              <td><span class="badge fail">기각 불가</span></td>
+              <td><span class="effect-none">d=0.03 (없음)</span></td>
+            </tr>
+            <tr>
+              <td>PLoan &rarr; Experience</td>
+              <td>Mann-Whitney U</td>
+              <td>0.568</td>
+              <td><span class="badge fail">기각 불가</span></td>
+              <td><span class="effect-none">d=0.03 (없음)</span></td>
+            </tr>
+            <tr>
+              <td>PLoan &rarr; Mortgage</td>
+              <td>Mann-Whitney U</td>
+              <td>0.0000076</td>
+              <td><span class="badge reject">H0 기각</span></td>
+              <td><span class="effect-small">d=0.37 (작음)</span></td>
+            </tr>
+            <tr>
+              <td>Family &rarr; PLoan</td>
+              <td>Kruskal-Wallis</td>
+              <td>0.0000016</td>
+              <td><span class="badge reject">H0 기각</span></td>
+              <td><span class="effect-none">&#951;&sup2;=0.006 (미미)</span></td>
+            </tr>
+            <tr>
+              <td>Education &rarr; PLoan</td>
+              <td>Kruskal-Wallis</td>
+              <td>~0</td>
+              <td><span class="badge reject">H0 기각</span></td>
+              <td><span class="effect-small">&#951;&sup2;=0.022 (작음)</span></td>
+            </tr>
+            <tr>
+              <td>PLoan &times; CDAccount</td>
+              <td>카이제곱</td>
+              <td>~0</td>
+              <td><span class="badge reject">H0 기각</span></td>
+              <td><span class="effect-medium">V=0.315 (중간)</span></td>
+            </tr>
+            <tr>
+              <td>PLoan &times; HasMortgage</td>
+              <td>카이제곱</td>
+              <td>0.039</td>
+              <td><span class="badge reject">H0 기각</span></td>
+              <td><span class="effect-none">V=0.029 (미미)</span></td>
+            </tr>
+            <tr>
+              <td>Age &times; Experience</td>
+              <td>Spearman</td>
+              <td>~0</td>
+              <td><span class="badge reject">H0 기각</span></td>
+              <td><span class="effect-large">r&sup2;=0.989 (매우 큼)</span></td>
+            </tr>
+            <tr>
+              <td>Income &times; CCAvg</td>
+              <td>Spearman</td>
+              <td>~0</td>
+              <td><span class="badge reject">H0 기각</span></td>
+              <td><span class="effect-medium">r&sup2;=0.337 (중간)</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:8px;font-size:11px;color:var(--gray-400);font-weight:300;">
+          * 정규성 기각(Shapiro-Wilk, p &lt; 0.05) → 비모수 검정 자동 선택. 대표본(n=5,000) 특성상 p-value와 효과 크기를 병행 해석.
+        </div>
+        <div class="slide-num">07 / 10</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         슬라이드 8: 핵심 발견
+    ═══════════════════════════════════════════ -->
+    <div class="slide" id="slide-8">
+      <div class="slide-sidebar"></div>
+      <div class="slide-content">
+        <div class="slide-label">Key Findings</div>
+        <div class="slide-title">핵심 발견 — 효과 크기 Top 3</div>
+        <div class="title-divider"></div>
+        <div class="findings-grid">
+          <!-- Income -->
+          <div class="finding-card">
+            <div class="finding-rank">1</div>
+            <div class="finding-var">Income</div>
+            <div class="finding-effect">Cohen's d = 2.16</div>
+            <div class="finding-stat">
+              <div class="finding-vs">
+                <div>
+                  <div class="finding-num accept">$144.7K</div>
+                  <div style="font-size:11px;color:var(--sky);font-weight:600;">수락 고객</div>
+                </div>
+                <div class="finding-vs-label">VS</div>
+                <div>
+                  <div class="finding-num reject-color">$66.2K</div>
+                  <div style="font-size:11px;color:var(--gray-400);font-weight:600;">미수락 고객</div>
+                </div>
+              </div>
+              <div class="finding-multi">2.2<span style="font-size:20px;color:var(--sky);">&#215;</span></div>
+              <div class="finding-multi-label">소득 차이</div>
+            </div>
+            <div class="finding-desc">대출 수락을 결정하는 가장 강력한 단일 변수. 수락 고객의 소득이 평균 2배 이상 높음.</div>
+          </div>
+
+          <!-- CDAccount -->
+          <div class="finding-card">
+            <div class="finding-rank">2</div>
+            <div class="finding-var">CDAccount</div>
+            <div class="finding-effect">Cram&#233;r's V = 0.315</div>
+            <div class="finding-stat">
+              <div class="finding-vs">
+                <div>
+                  <div class="finding-num accept">46.4%</div>
+                  <div style="font-size:11px;color:var(--sky);font-weight:600;">CD 보유자</div>
+                </div>
+                <div class="finding-vs-label">VS</div>
+                <div>
+                  <div class="finding-num reject-color">7.2%</div>
+                  <div style="font-size:11px;color:var(--gray-400);font-weight:600;">미보유자</div>
+                </div>
+              </div>
+              <div class="finding-multi">6.4<span style="font-size:20px;color:var(--sky);">&#215;</span></div>
+              <div class="finding-multi-label">수락율 차이</div>
+            </div>
+            <div class="finding-desc">CD 계좌 보유 고객의 대출 수락율은 미보유자의 6.4배. 중간 효과 크기 (V=0.315).</div>
+          </div>
+
+          <!-- CCAvg -->
+          <div class="finding-card">
+            <div class="finding-rank">3</div>
+            <div class="finding-var">CCAvg</div>
+            <div class="finding-effect">Cohen's d = 1.18</div>
+            <div class="finding-stat">
+              <div class="finding-vs">
+                <div>
+                  <div class="finding-num accept">$3.91K</div>
+                  <div style="font-size:11px;color:var(--sky);font-weight:600;">수락 고객</div>
+                </div>
+                <div class="finding-vs-label">VS</div>
+                <div>
+                  <div class="finding-num reject-color">$1.73K</div>
+                  <div style="font-size:11px;color:var(--gray-400);font-weight:600;">미수락 고객</div>
+                </div>
+              </div>
+              <div class="finding-multi">2.3<span style="font-size:20px;color:var(--sky);">&#215;</span></div>
+              <div class="finding-multi-label">카드 지출 차이</div>
+            </div>
+            <div class="finding-desc">월 신용카드 지출이 높은 고객이 대출도 수락. Income과 함께 고소득-고지출 프로파일 형성.</div>
+          </div>
+        </div>
+        <div class="large-sample-notice">
+          &#9888; <strong>대표본 주의 (n=5,000)</strong>: 검정력이 높아 작은 차이도 통계적으로 유의하게 검출될 수 있습니다. p-value가 유의하더라도 효과 크기가 작으면 (&#951;&sup2;&lt;0.01, V&lt;0.1 등) 실질적 의미가 제한적입니다.
+        </div>
+        <div class="slide-num">08 / 10</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         슬라이드 9: 변수 선택 권장
+    ═══════════════════════════════════════════ -->
+    <div class="slide" id="slide-9">
+      <div class="slide-sidebar"></div>
+      <div class="slide-content">
+        <div class="slide-label">Variable Selection</div>
+        <div class="slide-title">변수 선택 권장</div>
+        <div class="title-divider"></div>
+        <div class="var-select-layout">
+          <div>
+            <div class="var-select-title">제거 권장 변수</div>
+            <div class="remove-list">
+              <div class="remove-item">
+                <div class="remove-item-name">Experience</div>
+                <div class="remove-item-reason">
+                  Age와 r=0.994 다중공선성. 두 변수 모두 PLoan과 통계적 무관(p&gt;0.5, d=0.03). Experience 제거 권장 — Age가 더 직관적이고 설명 가능성이 높음.
+                </div>
+              </div>
+              <div class="remove-item" style="border-left-color:var(--accent-amber);background:#fff8f0;">
+                <div class="remove-item-name" style="color:var(--accent-amber);">HasMortgage</div>
+                <div class="remove-item-reason">
+                  카이제곱 p=0.039로 통계적 유의성은 있으나 Cram&#233;r's V=0.029 → 실질 효과 매우 미미. 대표본 효과로 인한 유의성으로 판단.
+                </div>
+              </div>
+              <div style="background:var(--sky-pale);padding:14px 16px;border:1px solid rgba(74,144,217,0.3);">
+                <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--sky);text-transform:uppercase;margin-bottom:6px;">다중공선성 요약</div>
+                <div style="font-size:12.5px;color:var(--gray-600);line-height:1.6;font-weight:300;">
+                  Age &#x2194; Experience (r=0.994) : 동시 투입 절대 금지<br>
+                  Income &#x2194; CCAvg (r=0.580) : 동시 투입 시 VIF 확인 필요
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="var-select-title">모델링 추천 입력 변수 (7개)</div>
+            <div class="keep-list">
+              <div class="keep-item" style="border-left-color:var(--accent-red);">
+                <span class="keep-item-name">Income</span>
+                <span class="keep-item-effect" style="color:var(--accent-red);">d=2.16 &#9733;&#9733;&#9733;</span>
+              </div>
+              <div class="keep-item" style="border-left-color:var(--navy);">
+                <span class="keep-item-name">CDAccount</span>
+                <span class="keep-item-effect" style="color:var(--navy);">V=0.315 &#9733;&#9733;</span>
+              </div>
+              <div class="keep-item" style="border-left-color:#e67e22;">
+                <span class="keep-item-name">CCAvg</span>
+                <span class="keep-item-effect" style="color:#e67e22;">d=1.18 &#9733;&#9733;&#9733;</span>
+              </div>
+              <div class="keep-item">
+                <span class="keep-item-name">Education</span>
+                <span class="keep-item-effect">&#951;&sup2;=0.022</span>
+              </div>
+              <div class="keep-item">
+                <span class="keep-item-name">Family</span>
+                <span class="keep-item-effect">&#951;&sup2;=0.006</span>
+              </div>
+              <div class="keep-item">
+                <span class="keep-item-name">Age</span>
+                <span class="keep-item-effect" style="color:var(--gray-400);">p=0.564 (참조)</span>
+              </div>
+              <div class="keep-item">
+                <span class="keep-item-name">Mortgage</span>
+                <span class="keep-item-effect">d=0.37</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-num">09 / 10</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         슬라이드 10: 결론 및 후속 제안
+    ═══════════════════════════════════════════ -->
+    <div class="slide" id="slide-10">
+      <div class="slide-sidebar"></div>
+      <div class="slide-content">
+        <div class="slide-label">Conclusion &amp; Next Steps</div>
+        <div class="slide-title">결론 및 후속 제안</div>
+        <div class="title-divider"></div>
+        <div class="conclusion-layout">
+          <div class="conclusion-main">
+            <div class="conclusion-statement">
+              개인 대출 수락을 결정하는 <strong>핵심 요인</strong>은<br>
+              <strong>소득(Income)</strong>, <strong>CD계좌 보유(CDAccount)</strong>, <strong>신용카드 지출(CCAvg)</strong>이며,<br>
+              교육 수준(Education)도 유의한 영향을 미친다.<br><br>
+              반면 Age · Experience · HasMortgage는 통계적 유의성과 효과 크기 기준 모두에서 모델 기여가 미미하다.
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;color:var(--sky);text-transform:uppercase;margin-bottom:6px;">핵심 예측 변수</div>
+            <div class="conclusion-key-vars">
+              <div class="conclusion-var">Income <span style="color:var(--sky);font-size:11px;">d=2.16</span></div>
+              <div class="conclusion-var">CDAccount <span style="color:var(--sky);font-size:11px;">V=0.315</span></div>
+              <div class="conclusion-var">CCAvg <span style="color:var(--sky);font-size:11px;">d=1.18</span></div>
+              <div class="conclusion-var">Education <span style="color:var(--sky);font-size:11px;">&#951;&sup2;=0.022</span></div>
+            </div>
+          </div>
+
+          <div class="next-steps">
+            <div class="next-title">후속 분석 제안</div>
+            <div class="next-item">
+              <div class="next-num">1</div>
+              <div class="next-text"><strong>분류 모델링</strong>: Experience 제거 후 로지스틱 회귀 · 랜덤 포레스트 학습</div>
+            </div>
+            <div class="next-item">
+              <div class="next-num">2</div>
+              <div class="next-text"><strong>불균형 처리</strong>: PLoan 수락 9.6% → SMOTE 오버샘플링 또는 class_weight 조정</div>
+            </div>
+            <div class="next-item">
+              <div class="next-num">3</div>
+              <div class="next-text"><strong>교호작용 분석</strong>: CDAccount &#215; Income 결합 효과 검토 (두 변수 모두 강한 효과)</div>
+            </div>
+            <div class="next-item">
+              <div class="next-num">4</div>
+              <div class="next-text"><strong>임계 소득 탐색</strong>: Income 구간화(binning)로 대출 수락 임계 소득 수준 파악</div>
+            </div>
+            <div style="margin-top:12px;background:var(--navy);color:white;padding:14px 18px;font-size:12px;line-height:1.7;font-weight:300;">
+              <span style="color:var(--sky-light);font-weight:700;">데이터 파이프라인 완료</span><br>
+              EDA &#8594; 전처리 &#8594; 통계 검정 완료.<br>
+              다음 단계: 분류 모델 학습 (03_modeling.ipynb)
+            </div>
+          </div>
+        </div>
+        <div class="slide-num">10 / 10</div>
+      </div>
+    </div>
+
+  </div><!-- /#stage -->
+</div><!-- /#viewport -->
+
+<!-- 도트 인디케이터 -->
+<div id="dots"></div>
+
+<!-- PDF 오버레이 -->
+<div id="pdf-overlay">
+  <svg width="40" height="40" viewBox="0 0 40 40">
+    <circle cx="20" cy="20" r="16" stroke="rgba(74,144,217,0.3)" stroke-width="3" fill="none"/>
+    <circle cx="20" cy="20" r="16" stroke="#4a90d9" stroke-width="3" fill="none" stroke-dasharray="30 70" stroke-linecap="round">
+      <animateTransform attributeName="transform" type="rotate" values="0 20 20;360 20 20" dur="0.8s" repeatCount="indefinite"/>
+    </circle>
+  </svg>
+  <p>PDF 생성 중... 잠시 기다려 주세요</p>
+</div>
+
+<script>
+(function() {
+  const TOTAL = 10;
+  let current = 1;
+
+  const stage = document.getElementById('stage');
+  const counter = document.getElementById('slide-counter');
+  const dotsEl = document.getElementById('dots');
+  const overlay = document.getElementById('pdf-overlay');
+
+  // 도트 생성
+  for (let i = 1; i <= TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 1 ? ' active' : '');
+    d.addEventListener('click', () => goTo(i));
+    dotsEl.appendChild(d);
+  }
+
+  function goTo(n) {
+    if (n < 1 || n > TOTAL) return;
+    document.getElementById('slide-' + current).classList.remove('active');
+    dotsEl.children[current - 1].classList.remove('active');
+    current = n;
+    document.getElementById('slide-' + current).classList.add('active');
+    dotsEl.children[current - 1].classList.add('active');
+    counter.textContent = current + ' / ' + TOTAL;
+  }
+
+  document.getElementById('btn-prev').addEventListener('click', () => goTo(current - 1));
+  document.getElementById('btn-next').addEventListener('click', () => goTo(current + 1));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goTo(current - 1);
+  });
+
+  // 스케일 조정
+  function rescale() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight - 48;
+    const sw = 1280, sh = 720;
+    const scale = Math.min(vw / sw, vh / sh);
+    stage.style.transform = 'scale(' + scale + ')';
+  }
+  rescale();
+  window.addEventListener('resize', rescale);
+
+  // PDF 저장
+  document.getElementById('btn-pdf').addEventListener('click', async function () {
+    overlay.classList.add('active');
+
+    async function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    try {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1280, 720] });
+
+      const saved = current;
+
+      for (let i = 1; i <= TOTAL; i++) {
+        goTo(i);
+        stage.style.transform = 'scale(1)';
+        await new Promise(r => setTimeout(r, 120));
+
+        const canvas = await html2canvas(stage, {
+          scale: 1,
+          useCORS: true,
+          backgroundColor: null,
+          width: 1280,
+          height: 720
+        });
+
+        rescale();
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+        if (i > 1) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, 0, 1280, 720);
+      }
+
+      pdf.save('UniversalBank_Analysis_Report.pdf');
+      goTo(saved);
+    } catch (err) {
+      alert('PDF 저장 실패: ' + err.message);
+    } finally {
+      overlay.classList.remove('active');
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,614 @@
+{
+  "data_info": {
+    "path": "cleaned/UniversalBank_cleaned.csv",
+    "rows": 5000,
+    "cols": 10
+  },
+  "alpha": 0.05,
+  "results": [
+    {
+      "title": "PLoan에 따른 Income 차이 검정",
+      "question": "PLoan에 따라 Income에 유의한 차이가 있는가?",
+      "x_var": "PLoan",
+      "y_var": "Income",
+      "h0": "PLoan에 따른 Income의 평균 차이가 없다",
+      "h1": "PLoan에 따른 Income의 평균 차이가 있다",
+      "assumptions": {
+        "normality": {
+          "test": "Shapiro-Wilk",
+          "statistic": 0.9282397043591053,
+          "p_value": 8.631808366486241e-44,
+          "pass": false
+        },
+        "equal_variance": {
+          "test": "Levene",
+          "statistic": 12.834946395482158,
+          "p_value": 0.00034344505463248685,
+          "pass": false
+        }
+      },
+      "test_name": "Mann-Whitney U",
+      "statistic": 169085.0,
+      "p_value": 1.0351753680641503e-203,
+      "conclusion": "H0 기각",
+      "interpretation": "두 그룹 간 유의한 차이가 있다 (α=0.05)",
+      "effect_size": {
+        "name": "Cohen's d",
+        "value": 2.1591595698417643
+      },
+      "posthoc": null,
+      "group_stats": {
+        "0": {
+          "n": 4520,
+          "mean": 66.23738938053097,
+          "std": 40.57853441727007
+        },
+        "1": {
+          "n": 480,
+          "mean": 144.74583333333334,
+          "std": 31.584429439522584
+        }
+      }
+    },
+    {
+      "title": "PLoan에 따른 CCAvg 차이 검정",
+      "question": "PLoan에 따라 CCAvg에 유의한 차이가 있는가?",
+      "x_var": "PLoan",
+      "y_var": "CCAvg",
+      "h0": "PLoan에 따른 CCAvg의 평균 차이가 없다",
+      "h1": "PLoan에 따른 CCAvg의 평균 차이가 있다",
+      "assumptions": {
+        "normality": {
+          "test": "Shapiro-Wilk",
+          "statistic": 0.8472601689280111,
+          "p_value": 1.324569320373953e-56,
+          "pass": false
+        },
+        "equal_variance": {
+          "test": "Levene",
+          "statistic": 108.71704896449798,
+          "p_value": 3.38862700372859e-25,
+          "pass": false
+        }
+      },
+      "test_name": "Mann-Whitney U",
+      "statistic": 417591.0,
+      "p_value": 3.599450022652159e-109,
+      "conclusion": "H0 기각",
+      "interpretation": "두 그룹 간 유의한 차이가 있다 (α=0.05)",
+      "effect_size": {
+        "name": "Cohen's d",
+        "value": 1.175305821695642
+      },
+      "posthoc": null,
+      "group_stats": {
+        "0": {
+          "n": 4520,
+          "mean": 1.7290088495575222,
+          "std": 1.5676473465240695
+        },
+        "1": {
+          "n": 480,
+          "mean": 3.905354166666667,
+          "std": 2.0976811632402774
+        }
+      }
+    },
+    {
+      "title": "PLoan에 따른 Age 차이 검정",
+      "question": "PLoan에 따라 Age에 유의한 차이가 있는가?",
+      "x_var": "PLoan",
+      "y_var": "Age",
+      "h0": "PLoan에 따른 Age의 평균 차이가 없다",
+      "h1": "PLoan에 따른 Age의 평균 차이가 있다",
+      "assumptions": {
+        "normality": {
+          "test": "Shapiro-Wilk",
+          "statistic": 0.9618631146872192,
+          "p_value": 2.2626746810877327e-34,
+          "pass": false
+        },
+        "equal_variance": {
+          "test": "Levene",
+          "statistic": 0.2299845249918809,
+          "p_value": 0.6315562867671118,
+          "pass": true
+        }
+      },
+      "test_name": "Mann-Whitney U",
+      "statistic": 1102125.0,
+      "p_value": 0.5643964562531542,
+      "conclusion": "H0 기각할 수 없음",
+      "interpretation": "두 그룹 간 유의한 차이가 있다고 볼 수 없다 (α=0.05)",
+      "effect_size": {
+        "name": "Cohen's d",
+        "value": 0.026090818922546662
+      },
+      "posthoc": null,
+      "group_stats": {
+        "0": {
+          "n": 4520,
+          "mean": 45.36725663716814,
+          "std": 11.450426686156431
+        },
+        "1": {
+          "n": 480,
+          "mean": 45.06666666666667,
+          "std": 11.590964253729958
+        }
+      }
+    },
+    {
+      "title": "PLoan에 따른 Experience 차이 검정",
+      "question": "PLoan에 따라 Experience에 유의한 차이가 있는가?",
+      "x_var": "PLoan",
+      "y_var": "Experience",
+      "h0": "PLoan에 따른 Experience의 평균 차이가 없다",
+      "h1": "PLoan에 따른 Experience의 평균 차이가 있다",
+      "assumptions": {
+        "normality": {
+          "test": "Shapiro-Wilk",
+          "statistic": 0.9621360283494851,
+          "p_value": 2.849726432130776e-34,
+          "pass": false
+        },
+        "equal_variance": {
+          "test": "Levene",
+          "statistic": 0.3648608073725961,
+          "p_value": 0.5458463978558693,
+          "pass": true
+        }
+      },
+      "test_name": "Mann-Whitney U",
+      "statistic": 1101946.0,
+      "p_value": 0.568425947302291,
+      "conclusion": "H0 기각할 수 없음",
+      "interpretation": "두 그룹 간 유의한 차이가 있다고 볼 수 없다 (α=0.05)",
+      "effect_size": {
+        "name": "Cohen's d",
+        "value": 0.02683792549337354
+      },
+      "posthoc": null,
+      "group_stats": {
+        "0": {
+          "n": 4520,
+          "mean": 20.152433628318583,
+          "std": 11.420525707774207
+        },
+        "1": {
+          "n": 480,
+          "mean": 19.84375,
+          "std": 11.582443092708232
+        }
+      }
+    },
+    {
+      "title": "PLoan에 따른 Mortgage 차이 검정",
+      "question": "PLoan에 따라 Mortgage에 유의한 차이가 있는가?",
+      "x_var": "PLoan",
+      "y_var": "Mortgage",
+      "h0": "PLoan에 따른 Mortgage의 평균 차이가 없다",
+      "h1": "PLoan에 따른 Mortgage의 평균 차이가 있다",
+      "assumptions": {
+        "normality": {
+          "test": "Shapiro-Wilk",
+          "statistic": 0.6281947270687585,
+          "p_value": 7.10731616653502e-74,
+          "pass": false
+        },
+        "equal_variance": {
+          "test": "Levene",
+          "statistic": 102.99446587035672,
+          "p_value": 5.7303417215740255e-24,
+          "pass": false
+        }
+      },
+      "test_name": "Mann-Whitney U",
+      "statistic": 974814.5,
+      "p_value": 7.638092866051278e-06,
+      "conclusion": "H0 기각",
+      "interpretation": "두 그룹 간 유의한 차이가 있다 (α=0.05)",
+      "effect_size": {
+        "name": "Cohen's d",
+        "value": 0.374361142526837
+      },
+      "posthoc": null,
+      "group_stats": {
+        "0": {
+          "n": 4520,
+          "mean": 51.78938053097345,
+          "std": 92.03893060376195
+        },
+        "1": {
+          "n": 480,
+          "mean": 100.84583333333333,
+          "std": 160.8478617766957
+        }
+      }
+    },
+    {
+      "title": "Family에 따른 PLoan 차이 검정",
+      "question": "Family 그룹 간 PLoan에 유의한 차이가 있는가?",
+      "x_var": "Family",
+      "y_var": "PLoan",
+      "h0": "Family 그룹 간 PLoan의 평균 차이가 없다",
+      "h1": "Family 그룹 간 PLoan의 평균 차이가 있다 (최소 한 쌍)",
+      "assumptions": {
+        "normality": {
+          "test": "Shapiro-Wilk",
+          "statistic": 0.33425265053356834,
+          "p_value": 1.8398476947854916e-86,
+          "pass": false
+        },
+        "equal_variance": {
+          "test": "Levene",
+          "statistic": 9.943139929523165,
+          "p_value": 1.5624393458230729e-06,
+          "pass": false
+        }
+      },
+      "test_name": "Kruskal-Wallis",
+      "statistic": 29.67018119157037,
+      "p_value": 1.619058203004737e-06,
+      "conclusion": "H0 기각",
+      "interpretation": "그룹 간 유의한 차이가 있다 (α=0.05)",
+      "effect_size": {
+        "name": "η²",
+        "value": 0.005935223282970948
+      },
+      "posthoc": {
+        "method": "Nemenyi",
+        "matrix": {
+          "1": {
+            "1": 1.0,
+            "2": 0.8832,
+            "3": 0.0,
+            "4": 0.0147
+          },
+          "2": {
+            "1": 0.8832,
+            "2": 1.0,
+            "3": 0.001,
+            "4": 0.1313
+          },
+          "3": {
+            "1": 0.0,
+            "2": 0.001,
+            "3": 1.0,
+            "4": 0.3778
+          },
+          "4": {
+            "1": 0.0147,
+            "2": 0.1313,
+            "3": 0.3778,
+            "4": 1.0
+          }
+        }
+      },
+      "group_stats": {
+        "1": {
+          "n": 1472,
+          "mean": 0.07269021739130435,
+          "std": 0.25962732846699565
+        },
+        "2": {
+          "n": 1296,
+          "mean": 0.08179012345679013,
+          "std": 0.2740447028528615
+        },
+        "3": {
+          "n": 1010,
+          "mean": 0.1316831683168317,
+          "std": 0.3381459913984973
+        },
+        "4": {
+          "n": 1222,
+          "mean": 0.10965630114566285,
+          "std": 0.3124608723739895
+        }
+      }
+    },
+    {
+      "title": "Education에 따른 PLoan 차이 검정",
+      "question": "Education 그룹 간 PLoan에 유의한 차이가 있는가?",
+      "x_var": "Education",
+      "y_var": "PLoan",
+      "h0": "Education 그룹 간 PLoan의 평균 차이가 없다",
+      "h1": "Education 그룹 간 PLoan의 평균 차이가 있다 (최소 한 쌍)",
+      "assumptions": {
+        "normality": {
+          "test": "Shapiro-Wilk",
+          "statistic": 0.33425265053356834,
+          "p_value": 1.8398476947854916e-86,
+          "pass": false
+        },
+        "equal_variance": {
+          "test": "Levene",
+          "statistic": 56.85139229431796,
+          "p_value": 3.8589381161210563e-25,
+          "pass": false
+        }
+      },
+      "test_name": "Kruskal-Wallis",
+      "statistic": 111.21762389951898,
+      "p_value": 7.069681116136657e-25,
+      "conclusion": "H0 기각",
+      "interpretation": "그룹 간 유의한 차이가 있다 (α=0.05)",
+      "effect_size": {
+        "name": "η²",
+        "value": 0.022247974374778264
+      },
+      "posthoc": {
+        "method": "Nemenyi",
+        "matrix": {
+          "1": {
+            "1": 1.0,
+            "2": 0.0,
+            "3": 0.0
+          },
+          "2": {
+            "1": 0.0,
+            "2": 1.0,
+            "3": 0.8218
+          },
+          "3": {
+            "1": 0.0,
+            "2": 0.8218,
+            "3": 1.0
+          }
+        }
+      },
+      "group_stats": {
+        "1": {
+          "n": 2096,
+          "mean": 0.044370229007633585,
+          "std": 0.2059162737265895
+        },
+        "2": {
+          "n": 1403,
+          "mean": 0.12972202423378476,
+          "std": 0.3359973521658676
+        },
+        "3": {
+          "n": 1501,
+          "mean": 0.13657561625582945,
+          "std": 0.3433987730032969
+        }
+      }
+    },
+    {
+      "title": "PLoan와 CDAccount의 독립성 검정",
+      "question": "PLoan와 CDAccount는 독립적인가?",
+      "x_var": "PLoan",
+      "y_var": "CDAccount",
+      "h0": "PLoan와 CDAccount는 독립적이다",
+      "h1": "PLoan와 CDAccount는 연관성이 있다",
+      "assumptions": {
+        "min_expected": 28.992
+      },
+      "test_name": "카이제곱 검정",
+      "statistic": 495.90424218782334,
+      "p_value": 7.398297503329848e-110,
+      "conclusion": "H0 기각",
+      "interpretation": "두 변수 간 유의한 연관성이 있다 (α=0.05)",
+      "effect_size": {
+        "name": "Cramér's V",
+        "value": 0.3149299103571534
+      },
+      "posthoc": null,
+      "group_stats": {
+        "dof": 1,
+        "n": 5000
+      }
+    },
+    {
+      "title": "PLoan와 HasMortgage의 독립성 검정",
+      "question": "PLoan와 HasMortgage는 독립적인가?",
+      "x_var": "PLoan",
+      "y_var": "HasMortgage",
+      "h0": "PLoan와 HasMortgage는 독립적이다",
+      "h1": "PLoan와 HasMortgage는 연관성이 있다",
+      "assumptions": {
+        "min_expected": 147.648
+      },
+      "test_name": "카이제곱 검정",
+      "statistic": 4.2643758468264625,
+      "p_value": 0.0389195445526001,
+      "conclusion": "H0 기각",
+      "interpretation": "두 변수 간 유의한 연관성이 있다 (α=0.05)",
+      "effect_size": {
+        "name": "Cramér's V",
+        "value": 0.02920402659506549
+      },
+      "posthoc": null,
+      "group_stats": {
+        "dof": 1,
+        "n": 5000
+      }
+    },
+    {
+      "title": "Age와 Experience의 상관분석",
+      "question": "Age와 Experience 사이에 유의한 상관관계가 있는가?",
+      "x_var": "Age",
+      "y_var": "Experience",
+      "h0": "Age와 Experience 사이에 유의한 상관이 없다 (ρ=0)",
+      "h1": "Age와 Experience 사이에 유의한 상관이 있다",
+      "assumptions": {
+        "normality_x": {
+          "test": "Shapiro-Wilk",
+          "statistic": 0.9618631146872377,
+          "p_value": 2.262674681123144e-34,
+          "pass": false
+        },
+        "normality_y": {
+          "test": "Shapiro-Wilk",
+          "statistic": 0.9621360283494875,
+          "p_value": 2.849726432136973e-34,
+          "pass": false
+        }
+      },
+      "test_name": "Spearman",
+      "statistic": 0.9944417592183239,
+      "p_value": 0.0,
+      "conclusion": "H0 기각",
+      "interpretation": "유의한 상관이 있다 (α=0.05)",
+      "effect_size": {
+        "name": "r²",
+        "value": 0.9889144124772349
+      },
+      "posthoc": null,
+      "group_stats": {
+        "n": 5000,
+        "r": 0.9944417592183239
+      }
+    },
+    {
+      "title": "Income와 CCAvg의 상관분석",
+      "question": "Income와 CCAvg 사이에 유의한 상관관계가 있는가?",
+      "x_var": "Income",
+      "y_var": "CCAvg",
+      "h0": "Income와 CCAvg 사이에 유의한 상관이 없다 (ρ=0)",
+      "h1": "Income와 CCAvg 사이에 유의한 상관이 있다",
+      "assumptions": {
+        "normality_x": {
+          "test": "Shapiro-Wilk",
+          "statistic": 0.9282397043590928,
+          "p_value": 8.631808366431251e-44,
+          "pass": false
+        },
+        "normality_y": {
+          "test": "Shapiro-Wilk",
+          "statistic": 0.8472601689280083,
+          "p_value": 1.3245693203728757e-56,
+          "pass": false
+        }
+      },
+      "test_name": "Spearman",
+      "statistic": 0.5802100974622213,
+      "p_value": 0.0,
+      "conclusion": "H0 기각",
+      "interpretation": "유의한 상관이 있다 (α=0.05)",
+      "effect_size": {
+        "name": "r²",
+        "value": 0.33664375719712036
+      },
+      "posthoc": null,
+      "group_stats": {
+        "n": 5000,
+        "r": 0.5802100974622213
+      }
+    }
+  ],
+  "summary": [
+    {
+      "title": "PLoan에 따른 Income 차이 검정",
+      "test": "Mann-Whitney U",
+      "p_value": 1.0351753680641503e-203,
+      "conclusion": "H0 기각",
+      "effect_size": {
+        "name": "Cohen's d",
+        "value": 2.1591595698417643
+      }
+    },
+    {
+      "title": "PLoan에 따른 CCAvg 차이 검정",
+      "test": "Mann-Whitney U",
+      "p_value": 3.599450022652159e-109,
+      "conclusion": "H0 기각",
+      "effect_size": {
+        "name": "Cohen's d",
+        "value": 1.175305821695642
+      }
+    },
+    {
+      "title": "PLoan에 따른 Age 차이 검정",
+      "test": "Mann-Whitney U",
+      "p_value": 0.5643964562531542,
+      "conclusion": "H0 기각할 수 없음",
+      "effect_size": {
+        "name": "Cohen's d",
+        "value": 0.026090818922546662
+      }
+    },
+    {
+      "title": "PLoan에 따른 Experience 차이 검정",
+      "test": "Mann-Whitney U",
+      "p_value": 0.568425947302291,
+      "conclusion": "H0 기각할 수 없음",
+      "effect_size": {
+        "name": "Cohen's d",
+        "value": 0.02683792549337354
+      }
+    },
+    {
+      "title": "PLoan에 따른 Mortgage 차이 검정",
+      "test": "Mann-Whitney U",
+      "p_value": 7.638092866051278e-06,
+      "conclusion": "H0 기각",
+      "effect_size": {
+        "name": "Cohen's d",
+        "value": 0.374361142526837
+      }
+    },
+    {
+      "title": "Family에 따른 PLoan 차이 검정",
+      "test": "Kruskal-Wallis",
+      "p_value": 1.619058203004737e-06,
+      "conclusion": "H0 기각",
+      "effect_size": {
+        "name": "η²",
+        "value": 0.005935223282970948
+      }
+    },
+    {
+      "title": "Education에 따른 PLoan 차이 검정",
+      "test": "Kruskal-Wallis",
+      "p_value": 7.069681116136657e-25,
+      "conclusion": "H0 기각",
+      "effect_size": {
+        "name": "η²",
+        "value": 0.022247974374778264
+      }
+    },
+    {
+      "title": "PLoan와 CDAccount의 독립성 검정",
+      "test": "카이제곱 검정",
+      "p_value": 7.398297503329848e-110,
+      "conclusion": "H0 기각",
+      "effect_size": {
+        "name": "Cramér's V",
+        "value": 0.3149299103571534
+      }
+    },
+    {
+      "title": "PLoan와 HasMortgage의 독립성 검정",
+      "test": "카이제곱 검정",
+      "p_value": 0.0389195445526001,
+      "conclusion": "H0 기각",
+      "effect_size": {
+        "name": "Cramér's V",
+        "value": 0.02920402659506549
+      }
+    },
+    {
+      "title": "Age와 Experience의 상관분석",
+      "test": "Spearman",
+      "p_value": 0.0,
+      "conclusion": "H0 기각",
+      "effect_size": {
+        "name": "r²",
+        "value": 0.9889144124772349
+      }
+    },
+    {
+      "title": "Income와 CCAvg의 상관분석",
+      "test": "Spearman",
+      "p_value": 0.0,
+      "conclusion": "H0 기각",
+      "effect_size": {
+        "name": "r²",
+        "value": 0.33664375719712036
+      }
+    }
+  ]
+}
